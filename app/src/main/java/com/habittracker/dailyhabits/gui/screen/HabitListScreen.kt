@@ -37,7 +37,7 @@ fun HabitListScreen(viewModel: HabitViewModel, onAddHabit: () -> Unit) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(16.dp) // Общие отступы
+                    .padding(16.dp)
             ) {
                 Text(
                     text = "Ваши привычки",
@@ -61,26 +61,14 @@ fun HabitListScreen(viewModel: HabitViewModel, onAddHabit: () -> Unit) {
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        contentPadding = PaddingValues(0.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(habits) { habit ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                    contentColor = MaterialTheme.colorScheme.onSurface
-                                ),
-                                elevation = CardDefaults.cardElevation(4.dp)
-                            ) {
-                                HabitItem(
-                                    habit = habit,
-                                    onDelete = { viewModel.deleteHabit(it) }
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            HabitItem(
+                                habit = habit,
+                                onDelete = { viewModel.deleteHabit(it) }
+                            )
                         }
                     }
                 }

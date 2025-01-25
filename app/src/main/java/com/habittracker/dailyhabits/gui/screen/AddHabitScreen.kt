@@ -1,23 +1,31 @@
 package com.habittracker.dailyhabits.gui.screen
 
-import com.habittracker.dailyhabits.model.Habit
-import com.habittracker.dailyhabits.viewmodel.HabitViewModel
+import android.app.DatePickerDialog
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview // Для Preview
-import androidx.compose.material.icons.Icons // Для Icons
-import androidx.compose.material.icons.filled.ArrowBack // Для Icons.Default.ArrowBack
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.text.KeyboardOptions // Для KeyboardOptions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import androidx.compose.ui.platform.LocalContext
+import com.habittracker.dailyhabits.model.Habit
+import androidx.compose.ui.tooling.preview.Preview
+import com.habittracker.dailyhabits.viewmodel.HabitViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var deadline by remember { mutableStateOf<Long?>(null) }
+    val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
 
     Scaffold(
         topBar = {
@@ -38,6 +46,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Поле для названия
                 TextField(
                     value = name,
                     onValueChange = { name = it },
@@ -48,19 +57,59 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                // Поле для описания
                 TextField(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Описание") },
                     keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done
+                        imeAction = ImeAction.Next
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+
+                // Поле для выбора даты
+                TextField(
+                    value = deadline?.let { dateFormatter.format(Date(it)) } ?: "",
+                    onValueChange = { /* Поле только для чтения */ },
+                    label = { Text("Срок выполнения") },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Кнопка для выбора даты
                 Button(
                     onClick = {
-                        viewModel.addHabit(Habit(name = name, description = description))
+                        DatePickerDialog(
+                            context,
+                            { _, year, month, dayOfMonth ->
+                                calendar.set(year, month, dayOfMonth)
+                                deadline = calendar.timeInMillis
+                            },
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Выбрать дату")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Кнопка для добавления привычки
+                Button(
+                    onClick = {
+                        viewModel.addHabit(
+                            Habit(
+                                name = name,
+                                description = description,
+                                timestamp = System.currentTimeMillis(),
+                                deadline = deadline
+                            )
+                        )
                         onBack()
                     },
                     enabled = name.isNotBlank(),

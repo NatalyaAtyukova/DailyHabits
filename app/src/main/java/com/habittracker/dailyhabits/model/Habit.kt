@@ -9,5 +9,6 @@ data class Habit(
     val name: String,
     val description: String = "",
     val isCompleted: Boolean = false,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = System.currentTimeMillis(),
+    val deadline: Long? = null // Срок выполнения в виде timestamp
 )
