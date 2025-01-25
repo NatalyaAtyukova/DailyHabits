@@ -9,30 +9,82 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.gui.components.HabitItem
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HabitListScreen(viewModel: HabitViewModel) {
+fun HabitListScreen(viewModel: HabitViewModel, onAddHabit: () -> Unit) {
     val habits by viewModel.allHabits.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    if (habits.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Список привычек пуст", style = MaterialTheme.typography.bodyLarge)
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(habits) { habit ->
-                HabitItem(habit = habit, onDelete = { viewModel.deleteHabit(it) })
-                Divider()
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onAddHabit,
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Добавить привычку",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        },
+        content = { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp) // Общие отступы
+            ) {
+                Text(
+                    text = "Ваши привычки",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                if (habits.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Список привычек пуст. Добавьте новую привычку!",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(habits) { habit ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                elevation = CardDefaults.cardElevation(4.dp)
+                            ) {
+                                HabitItem(
+                                    habit = habit,
+                                    onDelete = { viewModel.deleteHabit(it) }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
             }
         }
-    }
+    )
 }
