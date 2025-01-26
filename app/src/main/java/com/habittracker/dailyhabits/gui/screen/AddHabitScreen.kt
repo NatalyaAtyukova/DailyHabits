@@ -24,8 +24,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
     var description by remember { mutableStateOf("") }
     var deadline by remember { mutableStateOf<Long?>(null) }
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
+    val context = LocalContext.current // Теперь это внутри @Composable функции
 
     Scaffold(
         topBar = {
@@ -81,8 +80,9 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                 // Кнопка для выбора даты
                 Button(
                     onClick = {
+                        val calendar = Calendar.getInstance()
                         DatePickerDialog(
-                            context,
+                            context, // Используем LocalContext.current внутри @Composable функции
                             { _, year, month, dayOfMonth ->
                                 calendar.set(year, month, dayOfMonth)
                                 deadline = calendar.timeInMillis
@@ -129,8 +129,11 @@ fun PreviewAddHabitScreen() {
         override fun getAllHabits() = kotlinx.coroutines.flow.flowOf(emptyList<Habit>())
         override suspend fun insertHabit(habit: Habit) {}
         override suspend fun deleteHabit(habit: Habit) {}
+        override suspend fun updateHabit(habit: Habit) {} // Добавлено для реализации интерфейса
     }
     val fakeViewModel = com.habittracker.dailyhabits.viewmodel.HabitViewModel(fakeHabitDao)
 
-    AddHabitScreen(viewModel = fakeViewModel, onBack = {})
+    MaterialTheme {
+        AddHabitScreen(viewModel = fakeViewModel, onBack = {})
+    }
 }

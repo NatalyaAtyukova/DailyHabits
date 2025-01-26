@@ -33,4 +33,16 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
             habitDao.deleteHabit(habit)
         }
     }
+
+    // Новый метод для обновления привычки
+    fun updateHabit(habit: Habit) {
+        viewModelScope.launch {
+            habitDao.updateHabit(habit)
+        }
+    }
+
+    // Метод для получения привычки по ID
+    suspend fun getHabitById(habitId: Int): Habit? {
+        return habitDao.getHabitById(habitId)
+    }
 }

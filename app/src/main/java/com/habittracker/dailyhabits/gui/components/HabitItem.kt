@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,7 +14,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun HabitItem(habit: Habit, onDelete: (Habit) -> Unit) {
+fun HabitItem(
+    habit: Habit,
+    onDelete: (Habit) -> Unit,
+    onEdit: (Habit) -> Unit
+) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
@@ -50,8 +55,13 @@ fun HabitItem(habit: Habit, onDelete: (Habit) -> Unit) {
                         )
                     }
                 }
-                IconButton(onClick = { showDeleteDialog = true }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Удалить привычку")
+                Row {
+                    IconButton(onClick = { onEdit(habit) }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Редактировать привычку")
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Удалить привычку")
+                    }
                 }
             }
 

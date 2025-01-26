@@ -13,10 +13,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.gui.components.HabitItem
+import com.habittracker.dailyhabits.model.Habit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HabitListScreen(viewModel: HabitViewModel, onAddHabit: () -> Unit) {
+fun HabitListScreen(
+    viewModel: HabitViewModel,
+    onAddHabit: () -> Unit,
+    onEditHabit: (Habit) -> Unit
+) {
     val habits by viewModel.allHabits.collectAsStateWithLifecycle(initialValue = emptyList())
 
     Scaffold(
@@ -67,7 +72,8 @@ fun HabitListScreen(viewModel: HabitViewModel, onAddHabit: () -> Unit) {
                         items(habits) { habit ->
                             HabitItem(
                                 habit = habit,
-                                onDelete = { viewModel.deleteHabit(it) }
+                                onDelete = { viewModel.deleteHabit(it) },
+                                onEdit = onEditHabit // Передача действия для редактирования
                             )
                         }
                     }
