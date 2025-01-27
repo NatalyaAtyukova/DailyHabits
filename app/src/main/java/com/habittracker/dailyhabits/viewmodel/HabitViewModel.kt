@@ -41,6 +41,16 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
         }
     }
 
+    fun updateHabitStatus(habit: Habit, date: Long, isCompleted: Boolean) {
+        viewModelScope.launch {
+            val updatedDailyStatus = habit.dailyStatus.toMutableMap().apply {
+                this[date] = isCompleted
+            }
+            val updatedHabit = habit.copy(dailyStatus = updatedDailyStatus)
+            habitDao.updateHabit(updatedHabit)
+        }
+    }
+
     // Метод для получения привычки по ID
     suspend fun getHabitById(habitId: Int): Habit? {
         return habitDao.getHabitById(habitId)

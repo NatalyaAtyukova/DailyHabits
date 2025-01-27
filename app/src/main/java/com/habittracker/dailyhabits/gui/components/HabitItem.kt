@@ -17,20 +17,32 @@ import java.util.*
 fun HabitItem(
     habit: Habit,
     onDelete: (Habit) -> Unit,
-    onEdit: (Habit) -> Unit
+    onEdit: (Habit) -> Unit,
+    onUpdateStatus: (Habit, Long, Boolean) -> Unit // Добавлено
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
+    // Преобразуем текущее время к полуночи текущего дня
+    val currentDate = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
+    // Проверяем статус привычки за текущий день
+    val isCompletedToday = habit.dailyStatus[currentDate] ?: false
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -69,7 +81,8 @@ fun HabitItem(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Создано: ${dateFormatter.format(Date(habit.timestamp))}",
@@ -83,11 +96,16 @@ fun HabitItem(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+                Checkbox(
+                    checked = isCompletedToday,
+                    onCheckedChange = { isChecked ->
+                        onUpdateStatus(habit, currentDate, isChecked) // Передаём округлённую дату
+                    }
+                )
             }
         }
     }
 
-    // Диалог подтверждения удаления
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },

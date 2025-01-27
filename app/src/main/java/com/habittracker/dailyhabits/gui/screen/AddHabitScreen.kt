@@ -24,7 +24,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
     var description by remember { mutableStateOf("") }
     var deadline by remember { mutableStateOf<Long?>(null) }
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-    val context = LocalContext.current // Теперь это внутри @Composable функции
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -32,7 +32,10 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                 title = { Text("Добавить привычку") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "Назад"
+                        )
                     }
                 }
             )
@@ -82,7 +85,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                     onClick = {
                         val calendar = Calendar.getInstance()
                         DatePickerDialog(
-                            context, // Используем LocalContext.current внутри @Composable функции
+                            context,
                             { _, year, month, dayOfMonth ->
                                 calendar.set(year, month, dayOfMonth)
                                 deadline = calendar.timeInMillis
@@ -129,8 +132,18 @@ fun PreviewAddHabitScreen() {
         override fun getAllHabits() = kotlinx.coroutines.flow.flowOf(emptyList<Habit>())
         override suspend fun insertHabit(habit: Habit) {}
         override suspend fun deleteHabit(habit: Habit) {}
-        override suspend fun updateHabit(habit: Habit) {} // Добавлено для реализации интерфейса
+        override suspend fun updateHabit(habit: Habit) {}
+        override suspend fun getHabitById(habitId: Int): Habit? {
+            return Habit(
+                id = habitId,
+                name = "Test Habit",
+                description = "Test Description",
+                timestamp = System.currentTimeMillis(),
+                deadline = null
+            )
+        }
     }
+
     val fakeViewModel = com.habittracker.dailyhabits.viewmodel.HabitViewModel(fakeHabitDao)
 
     MaterialTheme {

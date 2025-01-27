@@ -15,7 +15,6 @@ import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.gui.components.HabitItem
 import com.habittracker.dailyhabits.model.Habit
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitListScreen(
     viewModel: HabitViewModel,
@@ -66,14 +65,19 @@ fun HabitListScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(0.dp),
+                        contentPadding = PaddingValues(vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(habits) { habit ->
                             HabitItem(
                                 habit = habit,
                                 onDelete = { viewModel.deleteHabit(it) },
-                                onEdit = onEditHabit // Передача действия для редактирования
+                                onEdit = { habitToEdit ->
+                                    onEditHabit(habitToEdit) // Передача действия редактирования
+                                },
+                                onUpdateStatus = { habitToUpdate, date, isCompleted ->
+                                    viewModel.updateHabitStatus(habitToUpdate, date, isCompleted)
+                                }
                             )
                         }
                     }
