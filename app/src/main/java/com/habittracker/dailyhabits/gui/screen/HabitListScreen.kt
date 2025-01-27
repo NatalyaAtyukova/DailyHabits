@@ -69,6 +69,9 @@ fun HabitListScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(habits) { habit ->
+                            // Расчёт прогресса для текущей привычки
+                            val progress = viewModel.calculateProgress(habit)
+
                             HabitItem(
                                 habit = habit,
                                 onDelete = { viewModel.deleteHabit(it) },
@@ -77,7 +80,8 @@ fun HabitListScreen(
                                 },
                                 onUpdateStatus = { habitToUpdate, date, isCompleted ->
                                     viewModel.updateHabitStatus(habitToUpdate, date, isCompleted)
-                                }
+                                },
+                                progress = progress // Передача прогресса
                             )
                         }
                     }

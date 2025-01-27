@@ -51,6 +51,26 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
         }
     }
 
+    fun calculateProgress(habit: Habit): Float {
+        val currentDate = System.currentTimeMillis()
+
+        // Рассчитываем общее количество дней между созданием привычки и её дедлайном
+        val totalDays = habit.deadline?.let {
+            (it - habit.timestamp) / (24 * 60 * 60 * 1000) + 1
+        } ?: 1
+
+        // Создаём список всех дат между началом привычки и сегодняшним днём
+        val startDate = habit.timestamp
+        val daysBetween = (0 until totalDays).map { startDate + it * 24 * 60 * 60 * 1000 }
+
+        // Считаем количество выполненных дней
+        val completedDays = daysBetween.count { date ->
+            habit.dailyStatus[date] == true // Проверяем, выполнена ли привычка в конкретный день
+        }
+
+        return if (totalDays > 0) completedDays.toFloat() / totalDays else 0f
+    }
+
     // Метод для получения привычки по ID
     suspend fun getHabitById(habitId: Int): Habit? {
         return habitDao.getHabitById(habitId)

@@ -18,21 +18,11 @@ fun HabitItem(
     habit: Habit,
     onDelete: (Habit) -> Unit,
     onEdit: (Habit) -> Unit,
-    onUpdateStatus: (Habit, Long, Boolean) -> Unit // Добавлено
+    onUpdateStatus: (Habit, Long, Boolean) -> Unit,
+    progress: Float
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
-
-    // Преобразуем текущее время к полуночи текущего дня
-    val currentDate = Calendar.getInstance().apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-
-    // Проверяем статус привычки за текущий день
-    val isCompletedToday = habit.dailyStatus[currentDate] ?: false
 
     Card(
         modifier = Modifier
@@ -79,30 +69,16 @@ fun HabitItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
+            LinearProgressIndicator(
+                progress = progress,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Создано: ${dateFormatter.format(Date(habit.timestamp))}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                habit.deadline?.let {
-                    Text(
-                        text = "Срок: ${dateFormatter.format(Date(it))}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-                Checkbox(
-                    checked = isCompletedToday,
-                    onCheckedChange = { isChecked ->
-                        onUpdateStatus(habit, currentDate, isChecked) // Передаём округлённую дату
-                    }
-                )
-            }
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Встраиваем календарь прогресса
+            HabitProgressTracker(habit = habit, onUpdateStatus = onUpdateStatus)
         }
     }
 
