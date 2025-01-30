@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.habittracker.dailyhabits.database.HabitDao
 import com.habittracker.dailyhabits.model.Habit
 import kotlinx.coroutines.launch
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
 
@@ -14,7 +16,6 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
     val allHabits: StateFlow<List<Habit>> = _allHabits
 
     init {
-        // Обновление данных в StateFlow
         viewModelScope.launch {
             habitDao.getAllHabits().collect { habits ->
                 _allHabits.value = habits
@@ -24,7 +25,8 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
 
     fun addHabit(habit: Habit) {
         viewModelScope.launch {
-            habitDao.insertHabit(habit)
+            val today = getStartOfToday()
+            habitDao.insertHabit(habit.copy(timestamp = today))
         }
     }
 
@@ -34,45 +36,61 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
         }
     }
 
-    // Новый метод для обновления привычки
     fun updateHabit(habit: Habit) {
         viewModelScope.launch {
             habitDao.updateHabit(habit)
         }
     }
 
-    fun updateHabitStatus(habit: Habit, date: Long, isCompleted: Boolean) {
+    suspend fun getHabitById(habitId: Int): Habit? {
+        return habitDao.getHabitById(habitId)
+    }
+
+    fun updateHabitStatus(habit: Habit, date: Long, isCompleted: Boolean?) {
         viewModelScope.launch {
+            val normalizedDate = getStartOfDay(date) // Теперь точно нормализуем день
             val updatedDailyStatus = habit.dailyStatus.toMutableMap().apply {
-                this[date] = isCompleted
+                if (isCompleted == null) remove(normalizedDate) else put(normalizedDate, isCompleted)
             }
-            val updatedHabit = habit.copy(dailyStatus = updatedDailyStatus)
-            habitDao.updateHabit(updatedHabit)
+            habitDao.updateHabit(habit.copy(dailyStatus = updatedDailyStatus))
         }
     }
 
     fun calculateProgress(habit: Habit): Float {
-        val currentDate = System.currentTimeMillis()
-
-        // Рассчитываем общее количество дней между созданием привычки и её дедлайном
         val totalDays = habit.deadline?.let {
-            (it - habit.timestamp) / (24 * 60 * 60 * 1000) + 1
+            val calculatedDays = TimeUnit.MILLISECONDS.toDays(it - habit.timestamp).toInt() + 1
+            if (calculatedDays > 0) calculatedDays else 1
         } ?: 1
 
-        // Создаём список всех дат между началом привычки и сегодняшним днём
         val startDate = habit.timestamp
-        val daysBetween = (0 until totalDays).map { startDate + it * 24 * 60 * 60 * 1000 }
+        val daysBetween =
+            (0 until totalDays).map { startDate + TimeUnit.DAYS.toMillis(it.toLong()) }
 
-        // Считаем количество выполненных дней
         val completedDays = daysBetween.count { date ->
-            habit.dailyStatus[date] == true // Проверяем, выполнена ли привычка в конкретный день
+            habit.dailyStatus[date] == true
         }
 
         return if (totalDays > 0) completedDays.toFloat() / totalDays else 0f
     }
 
-    // Метод для получения привычки по ID
-    suspend fun getHabitById(habitId: Int): Habit? {
-        return habitDao.getHabitById(habitId)
+    private fun getStartOfToday(): Long {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return calendar.timeInMillis
+    }
+
+    private fun getStartOfDay(date: Long): Long {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = date
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        return calendar.timeInMillis
     }
 }

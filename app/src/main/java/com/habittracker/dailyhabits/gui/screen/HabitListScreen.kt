@@ -35,58 +35,56 @@ fun HabitListScreen(
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
-        },
-        content = { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Ваши привычки",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Ваши привычки",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
 
-                if (habits.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Список привычек пуст. Добавьте новую привычку!",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(16.dp)
+            if (habits.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Список привычек пуст. Добавьте новую привычку!",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(habits) { habit ->
+                        // Рассчитываем прогресс привычки перед передачей в HabitItem
+                        val progress = viewModel.calculateProgress(habit)
+
+                        HabitItem(
+                            habit = habit,
+                            onDelete = { viewModel.deleteHabit(it) },
+                            onEdit = { habitToEdit -> onEditHabit(habitToEdit) },
+                            onUpdateStatus = { habitToUpdate, date, isCompleted ->
+                                val correctedDate = date / (24 * 60 * 60 * 1000) * (24 * 60 * 60 * 1000) // Округление до 00:00
+                                viewModel.updateHabitStatus(habitToUpdate, correctedDate, isCompleted)
+                            },
+                            progress = progress
                         )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(habits) { habit ->
-                            // Расчёт прогресса для текущей привычки
-                            val progress = viewModel.calculateProgress(habit)
-
-                            HabitItem(
-                                habit = habit,
-                                onDelete = { viewModel.deleteHabit(it) },
-                                onEdit = { habitToEdit ->
-                                    onEditHabit(habitToEdit) // Передача действия редактирования
-                                },
-                                onUpdateStatus = { habitToUpdate, date, isCompleted ->
-                                    viewModel.updateHabitStatus(habitToUpdate, date, isCompleted)
-                                },
-                                progress = progress // Передача прогресса
-                            )
-                        }
                     }
                 }
             }
         }
-    )
+    }
 }

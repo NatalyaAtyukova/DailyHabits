@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.habittracker.dailyhabits.model.Habit
 import java.text.SimpleDateFormat
 import java.util.*
@@ -18,7 +19,7 @@ fun HabitItem(
     habit: Habit,
     onDelete: (Habit) -> Unit,
     onEdit: (Habit) -> Unit,
-    onUpdateStatus: (Habit, Long, Boolean) -> Unit,
+    onUpdateStatus: (Habit, Long, Boolean?) -> Unit,
     progress: Float
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -39,6 +40,7 @@ fun HabitItem(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            // Заголовок и кнопки
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -69,19 +71,54 @@ fun HabitItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            LinearProgressIndicator(
-                progress = progress,
+            // Прогресс-бар выполнения привычки
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary
-            )
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "${(progress * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 14.sp
+                )
+                LinearProgressIndicator(
+                    progress = progress.coerceIn(0f, 1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Встраиваем календарь прогресса
+            // Дата создания и дедлайн
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Создано: ${dateFormatter.format(Date(habit.timestamp))}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                habit.deadline?.let { deadline ->
+                    Text(
+                        text = "Срок: ${dateFormatter.format(Date(deadline))}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Визуальный календарь выполнения
             HabitProgressTracker(habit = habit, onUpdateStatus = onUpdateStatus)
         }
     }
 
+    // Диалог подтверждения удаления
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
