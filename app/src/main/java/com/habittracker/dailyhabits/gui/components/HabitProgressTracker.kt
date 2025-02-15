@@ -118,7 +118,7 @@ fun HabitProgressTracker(
 
 // Функция для получения начала сегодняшнего дня (00:00:00)
 fun getStartOfToday(): Long {
-    val calendar = Calendar.getInstance().apply {
+    val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)

@@ -77,4 +77,6 @@ dependencies {
 
     //GSON
     implementation(libs.gson)
+
+    implementation(libs.androidx.work)
 }

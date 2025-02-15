@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.habittracker.dailyhabits.database.HabitDao
 import com.habittracker.dailyhabits.model.Habit
 import kotlinx.coroutines.launch
+import kotlin.math.max
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -58,20 +59,14 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
 
     fun calculateProgress(habit: Habit): Float {
         val totalDays = habit.deadline?.let {
-            val calculatedDays = TimeUnit.MILLISECONDS.toDays(it - habit.timestamp).toInt() + 1
-            if (calculatedDays > 0) calculatedDays else 1
+            val calculatedDays = TimeUnit.MILLISECONDS.toDays(it - habit.timestamp).toInt()
+            max(1, calculatedDays) // Исключаем отрицательные значения
         } ?: 1
 
-        val startDate = habit.timestamp
-        val daysBetween =
-            (0 until totalDays).map { startDate + TimeUnit.DAYS.toMillis(it.toLong()) }
-
-        val completedDays = daysBetween.count { date ->
-            habit.dailyStatus[date] == true
-        }
-
-        return if (totalDays > 0) completedDays.toFloat() / totalDays else 0f
+        val completedDays = habit.dailyStatus.count { it.value } // Теперь правильно работает с Map<Long, Boolean>
+        return (completedDays.toFloat() / totalDays.toFloat()).coerceIn(0f, 1f) // Ограничиваем от 0 до 1
     }
+
 
     private fun getStartOfToday(): Long {
         val calendar = Calendar.getInstance().apply {

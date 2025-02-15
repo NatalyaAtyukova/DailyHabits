@@ -10,6 +10,7 @@ composeBom = "2025.01.00"
 room = "2.6.1"
 navigation = "2.8.5"
 coroutines = "1.7.3"
+work = "2.8.1" # Добавляем версию WorkManager
 
 
 [libraries]
@@ -27,6 +28,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version = "1.7.6" }
 androidx-ui-text = { group = "androidx.compose.ui", name = "ui-text", version = "1.7.6" }
 gson = "com.google.code.gson:gson:2.10.1"
+androidx-work = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
 # Room
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
