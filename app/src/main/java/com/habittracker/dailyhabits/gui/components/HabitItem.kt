@@ -20,7 +20,8 @@ fun HabitItem(
     onDelete: (Habit) -> Unit,
     onEdit: (Habit) -> Unit,
     onUpdateStatus: (Habit, Long, Boolean?) -> Unit,
-    progress: Float
+    progress: Float,
+    skippedDays: Int // 👈 Добавляем новый параметр
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
@@ -87,6 +88,12 @@ fun HabitItem(
                         .fillMaxWidth()
                         .height(6.dp),
                     color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text( // 👈 Добавлено отображение пропущенных дней
+                    text = "Пропущено: $skippedDays дней",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
 
