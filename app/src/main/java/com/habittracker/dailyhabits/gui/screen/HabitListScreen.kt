@@ -70,15 +70,19 @@ fun HabitListScreen(
                 ) {
                     items(habits) { habit ->
                         // Рассчитываем прогресс привычки перед передачей в HabitItem
-                        val (progress, skippedDays) = viewModel.calculateProgress(habit)
+                        val (progress, skippedDays, streak) = viewModel.calculateProgress(habit)
 
                         HabitItem(
                             habit = habit,
                             onDelete = { viewModel.deleteHabit(it) },
-                            onEdit = { onEditHabit(habit) }, // ✅ Теперь используем переданный параметр
+                            onEdit = {
+                                viewModel.editHabit(habit) // ✅ Теперь сохраняем редактируемую привычку
+                                onEditHabit(habit) // Навигация к экрану редактирования
+                            },
                             onUpdateStatus = { habit, date, status -> viewModel.updateHabitStatus(habit, date, status) },
                             progress = progress,
-                            skippedDays = skippedDays
+                            skippedDays = skippedDays,
+                            streak = streak // ✅ Передаем streak в HabitItem
                         )
                     }
                 }

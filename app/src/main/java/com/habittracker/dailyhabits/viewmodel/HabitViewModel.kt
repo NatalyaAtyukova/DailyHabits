@@ -16,7 +16,6 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
     private val _allHabits = MutableStateFlow<List<Habit>>(emptyList())
     val allHabits: StateFlow<List<Habit>> = _allHabits
 
-    // ✅ Добавляем LiveData/StateFlow для хранения редактируемой привычки
     private val _selectedHabit = MutableStateFlow<Habit?>(null)
     val selectedHabit: StateFlow<Habit?> = _selectedHabit
 
@@ -48,7 +47,7 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
     }
 
     fun editHabit(habit: Habit) {
-        _selectedHabit.value = habit // ✅ Теперь переменная объявлена, и метод работает
+        _selectedHabit.value = habit
     }
 
     suspend fun getHabitById(habitId: Int): Habit? {
@@ -58,33 +57,40 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
     fun updateHabitStatus(habit: Habit, date: Long, isCompleted: Boolean?) {
         viewModelScope.launch {
             val normalizedDate = getStartOfDay(date)
-
-            // ✅ Глубокая копия мапы, чтобы избежать проблем с изменением
             val updatedDailyStatus = habit.dailyStatus.toMutableMap().apply {
                 if (isCompleted == null) remove(normalizedDate) else put(normalizedDate, isCompleted)
-            }.toMap() // ✅ Создаем новую неизменяемую мапу
+            }.toMap()
 
             habitDao.updateHabit(habit.copy(dailyStatus = updatedDailyStatus))
         }
     }
 
-    fun calculateProgress(habit: Habit): Pair<Float, Int> {
+    fun calculateProgress(habit: Habit): Triple<Float, Int, Int> {
         val totalDays = habit.deadline?.let {
             val calculatedDays = TimeUnit.MILLISECONDS.toDays(it - habit.timestamp).toInt()
-            max(1, calculatedDays) // Исключаем отрицательные значения
+            max(1, calculatedDays)
         } ?: 1
 
-        val completedDays = habit.dailyStatus.count { it.value } // Количество выполненных дней
-
-        // ✅ Исключаем отрицательные пропущенные дни
+        val completedDays = habit.dailyStatus.count { it.value }
         val skippedDays = max(0, totalDays - completedDays)
 
-        val progress = (completedDays.toFloat() / totalDays.toFloat()).coerceIn(0f, 1f) // Ограничиваем от 0 до 1
-        return Pair(progress, skippedDays) // Возвращаем и прогресс, и пропущенные дни
+        var maxStreak = 0
+        var currentStreak = 0
+        habit.dailyStatus.toSortedMap().forEach { (_, completed) ->
+            if (completed) {
+                currentStreak++
+                maxStreak = maxOf(maxStreak, currentStreak)
+            } else {
+                currentStreak = 0
+            }
+        }
+
+        val progress = (completedDays.toFloat() / totalDays.toFloat()).coerceIn(0f, 1f)
+        return Triple(progress, skippedDays, maxStreak)
     }
 
     private fun getStartOfToday(): Long {
-        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { // ✅ Принудительно используем UTC
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
@@ -94,7 +100,7 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
     }
 
     private fun getStartOfDay(date: Long): Long {
-        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { // ✅ Исправлено
+        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             timeInMillis = date
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)

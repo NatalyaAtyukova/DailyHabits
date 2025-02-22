@@ -1,5 +1,7 @@
 package com.habittracker.dailyhabits.gui.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -21,10 +23,16 @@ fun HabitItem(
     onEdit: (Habit) -> Unit,
     onUpdateStatus: (Habit, Long, Boolean?) -> Unit,
     progress: Float,
-    skippedDays: Int // 👈 Добавляем новый параметр
+    skippedDays: Int,
+    streak: Int // 👈 Добавлен параметр streak
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 500)
+    )
 
     Card(
         modifier = Modifier
@@ -83,7 +91,7 @@ fun HabitItem(
                     fontSize = 14.sp
                 )
                 LinearProgressIndicator(
-                    progress = progress.coerceIn(0f, 1f),
+                    progress = animatedProgress,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp),
@@ -94,6 +102,12 @@ fun HabitItem(
                     text = "Пропущено: $skippedDays дней",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text( // 👈 Добавлено отображение streak
+                    text = "🔥 $streak дней подряд!",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 

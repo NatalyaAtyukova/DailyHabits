@@ -26,14 +26,14 @@ fun HabitProgressTracker(
     val dateFormatter = SimpleDateFormat("dd.MM", Locale.getDefault())
     val today = getStartOfToday()
 
-    val startDate = habit.timestamp // Показываем все дни от создания привычки
-    val endDate = habit.deadline ?: today // Показываем до сегодняшнего дня, если нет дедлайна
+    val startDate = habit.timestamp
+    val endDate = habit.deadline ?: today
 
     val totalDays = ((endDate - startDate) / (24 * 60 * 60 * 1000)).toInt() + 1
     val daysBetween = (0 until totalDays).map { startDate + it * 24 * 60 * 60 * 1000 }
 
     var habitStatus by remember { mutableStateOf(habit.dailyStatus.toMutableMap()) }
-    var expandedDay by remember { mutableStateOf<Long?>(null) } // Храним дату, на которую нажали
+    var expandedDay by remember { mutableStateOf<Long?>(null) }
 
     LaunchedEffect(habit.dailyStatus) {
         habitStatus = habit.dailyStatus.toMutableMap()
@@ -44,13 +44,14 @@ fun HabitProgressTracker(
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         items(daysBetween) { date ->
-            val normalizedDate = date / (24 * 60 * 60 * 1000) * (24 * 60 * 60 * 1000) // Округление до начала дня
+            val normalizedDate = date / (24 * 60 * 60 * 1000) * (24 * 60 * 60 * 1000)
             val status = habitStatus[normalizedDate]
             val isMissed = normalizedDate < today && status == null
             val color = when {
                 status == true -> Color(0xFF4CAF50) // ✅ Зеленый - выполнено
                 status == false -> Color(0xFFF44336) // ❌ Красный - пропущено
-                isMissed -> Color(0xFFFFCDD2) // ⬜ Светло-красный - автоматически пропущено
+                isMissed -> Color(0xFFFF9800) // 🔥 Оранжевый - авто-пропущено
+                normalizedDate == today -> Color(0xFF2196F3) // 🔹 Синий - сегодня
                 else -> Color(0xFFBDBDBD) // ⬜ Серый - не отмечено
             }
 
@@ -69,7 +70,7 @@ fun HabitProgressTracker(
                         .padding(2.dp)
                         .border(1.dp, Color.Black, shape = MaterialTheme.shapes.small)
                         .background(color, shape = MaterialTheme.shapes.small)
-                        .clickable { expandedDay = normalizedDate }, // Открываем меню
+                        .clickable { expandedDay = normalizedDate },
                     contentAlignment = Alignment.Center
                 ) {
                     if (normalizedDate == today) {
@@ -116,7 +117,6 @@ fun HabitProgressTracker(
     }
 }
 
-// Функция для получения начала сегодняшнего дня (00:00:00)
 fun getStartOfToday(): Long {
     val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
         set(Calendar.HOUR_OF_DAY, 0)
