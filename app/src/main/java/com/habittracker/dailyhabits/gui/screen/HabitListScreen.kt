@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.gui.components.HabitItem
 import com.habittracker.dailyhabits.model.Habit
@@ -19,21 +20,35 @@ import com.habittracker.dailyhabits.model.Habit
 fun HabitListScreen(
     viewModel: HabitViewModel,
     onAddHabit: () -> Unit,
-    onEditHabit: (Habit) -> Unit
+    onEditHabit: (Habit) -> Unit,
+    onOpenStats: () -> Unit // ✅ Добавлен параметр для открытия статистики
 ) {
     val habits by viewModel.allHabits.collectAsStateWithLifecycle(initialValue = emptyList())
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddHabit,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Добавить привычку",
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
+            Column {
+                FloatingActionButton(
+                    onClick = onOpenStats, // ✅ Кнопка статистики
+                    containerColor = MaterialTheme.colorScheme.secondary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.BarChart,
+                        contentDescription = "Статистика",
+                        tint = MaterialTheme.colorScheme.onSecondary
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                FloatingActionButton(
+                    onClick = onAddHabit,
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Добавить привычку",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
             }
         }
     ) { innerPadding ->

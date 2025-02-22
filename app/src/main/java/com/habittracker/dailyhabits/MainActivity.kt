@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.habittracker.dailyhabits.database.HabitDatabase
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.viewmodel.HabitViewModelFactory
+import com.habittracker.dailyhabits.viewmodel.HabitStatsViewModel
 import com.habittracker.dailyhabits.navigation.AppNavigation
 
 class MainActivity : ComponentActivity() {
@@ -31,7 +32,8 @@ class MainActivity : ComponentActivity() {
             val viewModel: HabitViewModel = viewModel(
                 factory = HabitViewModelFactory(habitDao)
             )
-            AppNavigation(viewModel = viewModel)
+            val statsViewModel: HabitStatsViewModel = viewModel() // ✅ Добавлен ViewModel для статистики
+            AppNavigation(viewModel = viewModel, statsViewModel = statsViewModel)
         }
     }
 

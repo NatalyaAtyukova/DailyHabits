@@ -79,4 +79,6 @@ dependencies {
     implementation(libs.gson)
 
     implementation(libs.androidx.work)
+
+    implementation(libs.charts)
 }
