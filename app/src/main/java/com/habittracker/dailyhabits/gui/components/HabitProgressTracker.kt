@@ -26,8 +26,8 @@ fun HabitProgressTracker(
     val dateFormatter = SimpleDateFormat("dd.MM", Locale.getDefault())
     val today = getStartOfToday()
 
-    val startDate = maxOf(today, habit.timestamp)
-    val endDate = habit.deadline ?: today
+    val startDate = habit.timestamp // Показываем все дни от создания привычки
+    val endDate = habit.deadline ?: today // Показываем до сегодняшнего дня, если нет дедлайна
 
     val totalDays = ((endDate - startDate) / (24 * 60 * 60 * 1000)).toInt() + 1
     val daysBetween = (0 until totalDays).map { startDate + it * 24 * 60 * 60 * 1000 }
