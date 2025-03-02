@@ -23,14 +23,25 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
         viewModelScope.launch {
             habitDao.getAllHabits().collect { habits ->
                 _allHabits.value = habits
+                android.util.Log.d("HabitViewModel", "Habits updated: ${habits.map { it.id to it.dailyStatus }}")
             }
         }
     }
 
     fun addHabit(habit: Habit) {
         viewModelScope.launch {
-            val today = getStartOfToday()
-            habitDao.insertHabit(habit.copy(timestamp = today))
+            val deviceTime = System.currentTimeMillis()
+            val today = getStartOfToday(deviceTime)
+            
+            android.util.Log.d("HabitViewModel", "Adding new habit:")
+            android.util.Log.d("HabitViewModel", "Device time: ${Date(deviceTime)}")
+            android.util.Log.d("HabitViewModel", "Normalized today: ${Date(today)}")
+            
+            val newHabit = habit.copy(
+                timestamp = today,
+                dailyStatus = emptyMap()
+            )
+            habitDao.insertHabit(newHabit)
         }
     }
 
@@ -43,6 +54,7 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
     fun updateHabit(habit: Habit) {
         viewModelScope.launch {
             habitDao.updateHabit(habit)
+            android.util.Log.d("HabitViewModel", "Habit updated: ${habit.id}, dailyStatus: ${habit.dailyStatus}")
         }
     }
 
@@ -57,56 +69,101 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
     fun updateHabitStatus(habit: Habit, date: Long, isCompleted: Boolean?) {
         viewModelScope.launch {
             val normalizedDate = getStartOfDay(date)
+            android.util.Log.d("HabitViewModel", "Updating status for date ${Date(normalizedDate)}: habitId=${habit.id}, isCompleted=$isCompleted")
+            
             val updatedDailyStatus = habit.dailyStatus.toMutableMap().apply {
-                if (isCompleted == null) remove(normalizedDate) else put(normalizedDate, isCompleted)
+                if (isCompleted == null) {
+                    remove(normalizedDate)
+                } else {
+                    put(normalizedDate, isCompleted)
+                }
             }.toMap()
-
-            habitDao.updateHabit(habit.copy(dailyStatus = updatedDailyStatus))
+            
+            val updatedHabit = habit.copy(dailyStatus = updatedDailyStatus)
+            habitDao.updateHabit(updatedHabit)
+            
+            android.util.Log.d("HabitViewModel", "Status updated. Old status: ${habit.dailyStatus}")
+            android.util.Log.d("HabitViewModel", "New status: $updatedDailyStatus")
         }
     }
 
     fun calculateProgress(habit: Habit): Triple<Float, Int, Int> {
-        val totalDays = habit.deadline?.let {
-            val calculatedDays = TimeUnit.MILLISECONDS.toDays(it - habit.timestamp).toInt()
-            max(1, calculatedDays)
-        } ?: 1
+        val deviceTime = System.currentTimeMillis()
+        val now = getStartOfToday(deviceTime)
+        val dayInMillis = 24 * 60 * 60 * 1000L
 
-        val completedDays = habit.dailyStatus.count { it.value }
-        val skippedDays = max(0, totalDays - completedDays)
+        // Определяем период для расчета прогресса
+        val startDate = habit.timestamp
+        val endDate = minOf(habit.deadline ?: now, now)
 
-        var maxStreak = 0
+        var completedDays = 0
+        var skippedDays = 0
         var currentStreak = 0
-        habit.dailyStatus.toSortedMap().forEach { (_, completed) ->
-            if (completed) {
-                currentStreak++
-                maxStreak = maxOf(maxStreak, currentStreak)
-            } else {
-                currentStreak = 0
+        var maxStreak = 0
+
+        // Проходим по всем дням от начала до текущей даты
+        var currentDate = startDate
+        while (currentDate <= endDate) {
+            val status = habit.dailyStatus[currentDate]
+            val isPastDay = currentDate < (now - dayInMillis)
+
+            when {
+                status == true -> {
+                    completedDays++
+                    currentStreak++
+                    maxStreak = maxOf(maxStreak, currentStreak)
+                }
+                status == false || (status == null && isPastDay) -> {
+                    skippedDays++
+                    currentStreak = 0
+                }
             }
+            currentDate += dayInMillis
         }
 
-        val progress = (completedDays.toFloat() / totalDays.toFloat()).coerceIn(0f, 1f)
-        return Triple(progress, skippedDays, maxStreak)
+        // Считаем только прошедшие дни для прогресса
+        val totalPassedDays = ((endDate - startDate) / dayInMillis).toInt() + 1
+        
+        android.util.Log.d("HabitViewModel", """Progress calculation:
+            |habitId: ${habit.id}
+            |name: ${habit.name}
+            |startDate: ${Date(startDate)}
+            |endDate: ${Date(endDate)}
+            |now: ${Date(now)}
+            |device time: ${Date(deviceTime)}
+            |totalPassedDays: $totalPassedDays
+            |completedDays: $completedDays
+            |skippedDays: $skippedDays
+            |maxStreak: $maxStreak
+            |dailyStatus: ${habit.dailyStatus.map { (date, status) -> "${Date(date)}: $status" }}
+        """.trimMargin())
+
+        val progress = if (totalPassedDays > 0) {
+            completedDays.toFloat() / totalPassedDays.toFloat()
+        } else {
+            0f
+        }
+
+        return Triple(progress.coerceIn(0f, 1f), skippedDays, maxStreak)
     }
 
-    private fun getStartOfToday(): Long {
-        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+    private fun getStartOfToday(deviceTime: Long = System.currentTimeMillis()): Long {
+        return Calendar.getInstance().apply {
+            timeInMillis = deviceTime
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }
-        return calendar.timeInMillis
+        }.timeInMillis
     }
 
     private fun getStartOfDay(date: Long): Long {
-        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+        return Calendar.getInstance().apply {
             timeInMillis = date
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }
-        return calendar.timeInMillis
+        }.timeInMillis
     }
 }

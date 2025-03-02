@@ -1,15 +1,21 @@
 package com.habittracker.dailyhabits.gui.components
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.habittracker.dailyhabits.model.Habit
@@ -24,25 +30,36 @@ fun HabitItem(
     onUpdateStatus: (Habit, Long, Boolean?) -> Unit,
     progress: Float,
     skippedDays: Int,
-    streak: Int // 👈 Добавлен параметр streak
+    streak: Int
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
-        animationSpec = tween(durationMillis = 500)
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
     )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 8.dp)
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 8.dp,
+            focusedElevation = 6.dp
+        )
     ) {
         Column(
             modifier = Modifier
@@ -57,84 +74,136 @@ fun HabitItem(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = habit.name.ifBlank { "Без названия" },
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.primary
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
                     )
                     if (habit.description.isNotBlank()) {
                         Text(
                             text = habit.description,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
                     }
                 }
-                Row {
-                    IconButton(onClick = { onEdit(habit) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Редактировать привычку")
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    IconButton(
+                        onClick = { onEdit(habit) },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Редактировать привычку",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
-                    IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Удалить привычку")
+                    IconButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.errorContainer)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Удалить привычку",
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Прогресс-бар выполнения привычки
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "${(progress * 100).toInt()}%",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 14.sp
-                )
-                LinearProgressIndicator(
-                    progress = animatedProgress,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp),
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text( // 👈 Добавлено отображение пропущенных дней
-                    text = "Пропущено: $skippedDays дней",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text( // 👈 Добавлено отображение streak
-                    text = "🔥 $streak дней подряд!",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Дата создания и дедлайн
+            // Статистика
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text(
-                    text = "Создано: ${dateFormatter.format(Date(habit.timestamp))}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                StatisticItem(
+                    icon = Icons.Default.Timeline,
+                    value = "${(progress * 100).toInt()}%",
+                    label = "Прогресс",
+                    color = MaterialTheme.colorScheme.primary
                 )
-                habit.deadline?.let { deadline ->
-                    Text(
-                        text = "Срок: ${dateFormatter.format(Date(deadline))}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
+                StatisticItem(
+                    icon = Icons.Default.Whatshot,
+                    value = "$streak",
+                    label = "Дней подряд",
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                StatisticItem(
+                    icon = Icons.Default.Warning,
+                    value = "$skippedDays",
+                    label = "Пропущено",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Прогресс-бар
+            LinearProgressIndicator(
+                progress = animatedProgress,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primaryContainer
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Даты
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Text(
+                        text = dateFormatter.format(Date(habit.timestamp)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                habit.deadline?.let { deadline ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Timer,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            text = dateFormatter.format(Date(deadline)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Визуальный календарь выполнения
+            // Календарь выполнения
             HabitProgressTracker(habit = habit, onUpdateStatus = onUpdateStatus)
         }
     }
@@ -146,10 +215,15 @@ fun HabitItem(
             title = { Text("Удалить привычку?") },
             text = { Text("Вы уверены, что хотите удалить привычку \"${habit.name}\"?") },
             confirmButton = {
-                TextButton(onClick = {
-                    onDelete(habit)
-                    showDeleteDialog = false
-                }) {
+                TextButton(
+                    onClick = {
+                        onDelete(habit)
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
                     Text("Удалить")
                 }
             },
@@ -158,6 +232,37 @@ fun HabitItem(
                     Text("Отмена")
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun StatisticItem(
+    icon: ImageVector,
+    value: String,
+    label: String,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

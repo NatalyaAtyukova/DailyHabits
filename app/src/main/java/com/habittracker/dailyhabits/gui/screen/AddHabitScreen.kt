@@ -25,7 +25,6 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     val context = LocalContext.current
 
-    // Округляем текущий timestamp до начала дня (исключает вчерашний день)
     val todayCalendar = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
@@ -37,12 +36,17 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Добавить привычку") },
+                title = { Text("Новая привычка") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             )
         }
     ) { innerPadding ->
@@ -50,54 +54,85 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            TextField(
+            OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text("Название") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
 
-            TextField(
+            OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
                 label = { Text("Описание") },
                 keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
 
-            TextField(
-                value = deadline?.let { dateFormatter.format(Date(it)) } ?: "",
-                onValueChange = { },
-                label = { Text("Срок выполнения") },
-                readOnly = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Button(
-                onClick = {
-                    val calendar = Calendar.getInstance()
-                    DatePickerDialog(
-                        context,
-                        { _, year, month, dayOfMonth ->
-                            calendar.set(year, month, dayOfMonth)
-                            deadline = calendar.timeInMillis
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                    ).show()
-                },
-                modifier = Modifier.fillMaxWidth()
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
             ) {
-                Text("Выбрать дату")
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Срок выполнения",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    if (deadline != null) {
+                        Text(
+                            text = dateFormatter.format(Date(deadline!!)),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    FilledTonalButton(
+                        onClick = {
+                            val calendar = Calendar.getInstance()
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, dayOfMonth ->
+                                    calendar.set(year, month, dayOfMonth)
+                                    deadline = calendar.timeInMillis
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            ).show()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (deadline == null) "Выбрать дату" else "Изменить дату")
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
@@ -105,17 +140,23 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                         Habit(
                             name = name,
                             description = description,
-                            timestamp = startOfDay, // Теперь точно стартует с сегодняшнего дня
+                            timestamp = startOfDay,
                             deadline = deadline,
-                            dailyStatus = emptyMap() // Без автоматической отметки
+                            dailyStatus = emptyMap()
                         )
                     )
                     onBack()
                 },
                 enabled = name.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
-                Text("Добавить привычку")
+                Text("Создать привычку", style = MaterialTheme.typography.titleMedium)
             }
         }
     }

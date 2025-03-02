@@ -40,12 +40,17 @@ fun EditHabitScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Редактировать привычку") },
+                    title = { Text("Редактирование") },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 )
             }
         ) { innerPadding ->
@@ -53,83 +58,135 @@ fun EditHabitScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Поле для названия
-                TextField(
+                OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text("Название") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
 
-                // Поле для описания
-                TextField(
+                OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
                     label = { Text("Описание") },
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
 
-                // Поле для выбора даты
-                TextField(
-                    value = deadline?.let { dateFormatter.format(Date(it)) } ?: "",
-                    onValueChange = { /* Поле только для чтения */ },
-                    label = { Text("Срок выполнения") },
-                    readOnly = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Кнопка для выбора даты
-                Button(
-                    onClick = {
-                        val calendar = Calendar.getInstance()
-                        DatePickerDialog(
-                            context,
-                            { _, year, month, dayOfMonth ->
-                                calendar.set(year, month, dayOfMonth)
-                                deadline = calendar.timeInMillis
-                            },
-                            calendar.get(Calendar.YEAR),
-                            calendar.get(Calendar.MONTH),
-                            calendar.get(Calendar.DAY_OF_MONTH)
-                        ).show()
-                    },
-                    modifier = Modifier.fillMaxWidth()
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
-                    Text("Выбрать дату")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Срок выполнения",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        if (deadline != null) {
+                            Text(
+                                text = dateFormatter.format(Date(deadline!!)),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        
+                        FilledTonalButton(
+                            onClick = {
+                                val calendar = Calendar.getInstance()
+                                DatePickerDialog(
+                                    context,
+                                    { _, year, month, dayOfMonth ->
+                                        calendar.set(year, month, dayOfMonth)
+                                        deadline = calendar.timeInMillis
+                                    },
+                                    calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH),
+                                    calendar.get(Calendar.DAY_OF_MONTH)
+                                ).show()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (deadline == null) "Выбрать дату" else "Изменить дату")
+                        }
+                    }
                 }
 
-                // Кнопка для сохранения изменений
-                Button(
-                    onClick = {
-                        viewModel.updateHabit(
-                            currentHabit.copy(
-                                name = name,
-                                description = description,
-                                deadline = deadline
-                            )
-                        )
-                        onBack()
-                    },
-                    enabled = name.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth()
+                Spacer(modifier = Modifier.weight(1f))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Сохранить изменения")
+                    OutlinedButton(
+                        onClick = { onBack() },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Отмена")
+                    }
+
+                    Button(
+                        onClick = {
+                            viewModel.updateHabit(
+                                currentHabit.copy(
+                                    name = name,
+                                    description = description,
+                                    deadline = deadline
+                                )
+                            )
+                            onBack()
+                        },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Сохранить")
+                    }
                 }
             }
         }
     } ?: run {
-        // Если привычка не найдена
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Привычка не найдена", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                "Привычка не найдена",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error
+            )
         }
     }
 }

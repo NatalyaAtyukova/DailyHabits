@@ -65,10 +65,15 @@ fun AppNavigation(viewModel: HabitViewModel, statsViewModel: HabitStatsViewModel
             }
         }
 
+        // Экран статистики
         composable(Routes.Stats) {
-            val habitsState = viewModel.allHabits.collectAsStateWithLifecycle(initialValue = emptyList()) // ✅ Исправлено
+            val habitsState = viewModel.allHabits.collectAsStateWithLifecycle(initialValue = emptyList())
             val habits = habitsState.value
-            HabitStatsScreen(viewModel = statsViewModel, habits = habits)
+            HabitStatsScreen(
+                viewModel = statsViewModel,
+                habits = habits,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
     }
 }

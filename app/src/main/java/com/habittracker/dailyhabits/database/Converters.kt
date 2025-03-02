@@ -2,10 +2,14 @@ package com.habittracker.dailyhabits.database
 
 import androidx.room.TypeConverter
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import java.util.*
 
 class Converters {
-    private val gson = Gson()
+    private val gson = GsonBuilder()
+        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        .create()
 
     @TypeConverter
     fun fromDailyStatusMap(map: Map<Long, Boolean>): String {
