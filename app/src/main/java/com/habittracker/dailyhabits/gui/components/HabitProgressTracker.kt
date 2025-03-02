@@ -135,15 +135,15 @@ private fun DayProgressItem(
     var showMenu by remember { mutableStateOf(false) }
 
     val backgroundColor = when (status) {
-        true -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-        false -> MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
-        null -> if (isPastDay) MaterialTheme.colorScheme.error.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface
+        true -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+        false -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+        null -> if (isPastDay) MaterialTheme.colorScheme.error.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
     }
 
     val borderColor = when {
         isToday -> MaterialTheme.colorScheme.primary
-        status == true -> MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-        status == false -> MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+        status == true -> MaterialTheme.colorScheme.tertiary
+        status == false -> MaterialTheme.colorScheme.error
         isPastDay -> MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
         else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
     }
@@ -155,7 +155,7 @@ private fun DayProgressItem(
     }
 
     val iconTint = when (status) {
-        true -> MaterialTheme.colorScheme.primary
+        true -> MaterialTheme.colorScheme.tertiary
         false -> MaterialTheme.colorScheme.error
         null -> if (isPastDay) MaterialTheme.colorScheme.error.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface
     }

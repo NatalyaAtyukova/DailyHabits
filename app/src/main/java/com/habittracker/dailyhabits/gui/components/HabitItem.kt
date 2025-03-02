@@ -52,13 +52,13 @@ fun HabitItem(
             ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+            containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 4.dp,
-            pressedElevation = 8.dp,
-            focusedElevation = 6.dp
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp,
+            focusedElevation = 3.dp
         )
     ) {
         Column(
@@ -94,12 +94,12 @@ fun HabitItem(
                         onClick = { onEdit(habit) },
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
                     ) {
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = "Редактировать привычку",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                     IconButton(
@@ -153,8 +153,8 @@ fun HabitItem(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primaryContainer
+                color = MaterialTheme.colorScheme.tertiary,
+                trackColor = MaterialTheme.colorScheme.tertiaryContainer
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -173,12 +173,12 @@ fun HabitItem(
                         Icons.Default.CalendarToday,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.secondary
                     )
                     Text(
                         text = dateFormatter.format(Date(habit.timestamp)),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.secondary
                     )
                 }
                 habit.deadline?.let { deadline ->

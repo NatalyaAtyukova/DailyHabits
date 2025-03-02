@@ -14,6 +14,7 @@ import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.viewmodel.HabitViewModelFactory
 import com.habittracker.dailyhabits.viewmodel.HabitStatsViewModel
 import com.habittracker.dailyhabits.navigation.AppNavigation
+import com.habittracker.dailyhabits.ui.theme.DailyHabitsTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,12 +29,14 @@ class MainActivity : ComponentActivity() {
         val habitDao = HabitDatabase.getDatabase(applicationContext).habitDao()
 
         setContent {
-            // Используем фабрику для создания ViewModel
-            val viewModel: HabitViewModel = viewModel(
-                factory = HabitViewModelFactory(habitDao)
-            )
-            val statsViewModel: HabitStatsViewModel = viewModel() // ✅ Добавлен ViewModel для статистики
-            AppNavigation(viewModel = viewModel, statsViewModel = statsViewModel)
+            DailyHabitsTheme {
+                // Используем фабрику для создания ViewModel
+                val viewModel: HabitViewModel = viewModel(
+                    factory = HabitViewModelFactory(habitDao)
+                )
+                val statsViewModel: HabitStatsViewModel = viewModel() // ✅ Добавлен ViewModel для статистики
+                AppNavigation(viewModel = viewModel, statsViewModel = statsViewModel)
+            }
         }
     }
 
