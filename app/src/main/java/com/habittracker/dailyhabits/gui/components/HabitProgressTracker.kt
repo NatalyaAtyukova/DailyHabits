@@ -32,31 +32,35 @@ fun HabitProgressTracker(
     onUpdateStatus: (Habit, Long, Boolean?) -> Unit
 ) {
     val deviceTime = System.currentTimeMillis()
-    val today = Calendar.getInstance().apply {
-        timeInMillis = deviceTime
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }
+    var currentPeriodStart by remember { mutableStateOf(
+        Calendar.getInstance().apply {
+            timeInMillis = deviceTime
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    ) }
 
     android.util.Log.d("HabitProgressTracker", "Device time: ${Date(deviceTime)}")
-    android.util.Log.d("HabitProgressTracker", "Today start: ${Date(today.timeInMillis)}")
+    android.util.Log.d("HabitProgressTracker", "Current period start: ${Date(currentPeriodStart)}")
 
-    // Определяем конечную дату (deadline или 7 дней если deadline не установлен)
+    // Определяем конечную дату (deadline или текущая дата + 30 дней если deadline не установлен)
     val endDate = habit.deadline ?: Calendar.getInstance().apply {
-        timeInMillis = today.timeInMillis
-        add(Calendar.DAY_OF_YEAR, 6) // 7 дней включая сегодня
+        timeInMillis = deviceTime
+        add(Calendar.DAY_OF_YEAR, 30)
     }.timeInMillis
 
-    // Получаем дни от сегодня до deadline (но не больше 7 дней)
+    // Получаем дни для текущего периода (7 дней)
     val days = mutableListOf<Long>()
     val calendar = Calendar.getInstance()
-    calendar.timeInMillis = today.timeInMillis
+    calendar.timeInMillis = currentPeriodStart
 
-    while (calendar.timeInMillis <= endDate && days.size < 7) {
-        days.add(calendar.timeInMillis)
-        calendar.add(Calendar.DAY_OF_YEAR, 1)
+    repeat(7) {
+        if (calendar.timeInMillis <= endDate) {
+            days.add(calendar.timeInMillis)
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
     }
 
     android.util.Log.d("HabitProgressTracker", "Days to display: ${days.map { Date(it) }}")
@@ -69,13 +73,64 @@ fun HabitProgressTracker(
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
             .padding(12.dp)
     ) {
-        Text(
-            text = "Прогресс",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = {
+                    val newStart = Calendar.getInstance().apply {
+                        timeInMillis = currentPeriodStart
+                        add(Calendar.DAY_OF_YEAR, -7)
+                    }.timeInMillis
+                    if (newStart >= habit.timestamp) {
+                        currentPeriodStart = newStart
+                    }
+                },
+                enabled = currentPeriodStart > habit.timestamp
+            ) {
+                Icon(
+                    Icons.Default.ChevronLeft,
+                    contentDescription = "Предыдущий период",
+                    tint = if (currentPeriodStart > habit.timestamp) 
+                        MaterialTheme.colorScheme.primary 
+                    else 
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                )
+            }
+            
+            Text(
+                text = "Прогресс",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
+            )
+            
+            IconButton(
+                onClick = {
+                    val newStart = Calendar.getInstance().apply {
+                        timeInMillis = currentPeriodStart
+                        add(Calendar.DAY_OF_YEAR, 7)
+                    }.timeInMillis
+                    if (days.size == 7 && newStart <= endDate) {
+                        currentPeriodStart = newStart
+                    }
+                },
+                enabled = days.size == 7 && calendar.timeInMillis <= endDate
+            ) {
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = "Следующий период",
+                    tint = if (days.size == 7 && calendar.timeInMillis <= endDate) 
+                        MaterialTheme.colorScheme.primary 
+                    else 
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -86,7 +141,7 @@ fun HabitProgressTracker(
                 DayProgressItem(
                     timestamp = normalizedTimestamp,
                     habit = habit,
-                    isToday = normalizedTimestamp == getStartOfDay(today.timeInMillis),
+                    isToday = normalizedTimestamp == getStartOfDay(deviceTime),
                     onUpdateStatus = onUpdateStatus
                 )
             }

@@ -122,7 +122,12 @@ fun EditHabitScreen(
                                     context,
                                     { _, year, month, dayOfMonth ->
                                         calendar.set(year, month, dayOfMonth)
+                                        calendar.set(Calendar.HOUR_OF_DAY, 0)
+                                        calendar.set(Calendar.MINUTE, 0)
+                                        calendar.set(Calendar.SECOND, 0)
+                                        calendar.set(Calendar.MILLISECOND, 0)
                                         deadline = calendar.timeInMillis
+                                        android.util.Log.d("EditHabitScreen", "Selected and normalized date: ${Date(deadline!!)}")
                                     },
                                     calendar.get(Calendar.YEAR),
                                     calendar.get(Calendar.MONTH),

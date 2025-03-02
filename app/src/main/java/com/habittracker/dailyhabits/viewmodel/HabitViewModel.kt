@@ -53,8 +53,17 @@ class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
 
     fun updateHabit(habit: Habit) {
         viewModelScope.launch {
-            habitDao.updateHabit(habit)
-            android.util.Log.d("HabitViewModel", "Habit updated: ${habit.id}, dailyStatus: ${habit.dailyStatus}")
+            val deviceTime = System.currentTimeMillis()
+            android.util.Log.d("HabitViewModel", "Updating habit ${habit.id}:")
+            android.util.Log.d("HabitViewModel", "Device time: ${Date(deviceTime)}")
+            android.util.Log.d("HabitViewModel", "Original deadline: ${habit.deadline?.let { Date(it) }}")
+            
+            val updatedHabit = habit.copy(
+                deadline = habit.deadline?.let { getStartOfDay(it) }
+            )
+            
+            android.util.Log.d("HabitViewModel", "Normalized deadline: ${updatedHabit.deadline?.let { Date(it) }}")
+            habitDao.updateHabit(updatedHabit)
         }
     }
 
