@@ -13,12 +13,18 @@ import com.habittracker.dailyhabits.database.HabitDatabase
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.viewmodel.HabitViewModelFactory
 import com.habittracker.dailyhabits.viewmodel.HabitStatsViewModel
-import com.habittracker.dailyhabits.navigation.AppNavigation
+import com.habittracker.dailyhabits.navigation.NavigationWithAds
 import com.habittracker.dailyhabits.ui.theme.DailyHabitsTheme
+import com.yandex.mobile.ads.common.MobileAds
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Инициализация Яндекс рекламы
+        MobileAds.initialize(this) {
+            // Реклама инициализирована
+        }
 
         // Проверяем и запрашиваем разрешение на уведомления (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -34,8 +40,8 @@ class MainActivity : ComponentActivity() {
                 val viewModel: HabitViewModel = viewModel(
                     factory = HabitViewModelFactory(habitDao)
                 )
-                val statsViewModel: HabitStatsViewModel = viewModel() // ✅ Добавлен ViewModel для статистики
-                AppNavigation(viewModel = viewModel, statsViewModel = statsViewModel)
+                val statsViewModel: HabitStatsViewModel = viewModel()
+                NavigationWithAds(viewModel = viewModel, statsViewModel = statsViewModel)
             }
         }
     }

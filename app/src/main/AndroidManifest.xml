@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -14,6 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DailyHabits"
         tools:targetApi="31">
+
+        <!-- Yandex Mobile Ads -->
+        <meta-data
+            android:name="com.yandex.mobile.ads.APPLICATION_ID"
+            android:value="R-M-14492374-1" />
 
         <activity
             android:name=".MainActivity"
