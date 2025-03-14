@@ -1,77 +1,78 @@
 package com.habittracker.dailyhabits.navigation
 
+import android.app.Activity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import androidx.navigation.NavType
-import com.habittracker.dailyhabits.gui.screen.HabitListScreen
+import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 import com.habittracker.dailyhabits.gui.screen.AddHabitScreen
 import com.habittracker.dailyhabits.gui.screen.EditHabitScreen
+import com.habittracker.dailyhabits.gui.screen.HabitListScreen
 import com.habittracker.dailyhabits.gui.screen.HabitStatsScreen
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.viewmodel.HabitStatsViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
-object Routes {
-    const val HabitList = "habit_list"
-    const val AddHabit = "add_habit"
-    const val EditHabit = "edit_habit/{habitId}"
-    const val Stats = "habit_stats" // ✅ Добавлен маршрут для статистики
-}
 
 @Composable
-fun AppNavigation(viewModel: HabitViewModel, statsViewModel: HabitStatsViewModel) {
-    val navController = rememberNavController()
+fun AppNavigation(
+    navController: NavHostController,
+    viewModel: HabitViewModel,
+    statsViewModel: HabitStatsViewModel
+) {
+    val context = LocalContext.current
+    val interstitialAdManager = remember { InterstitialAdManager(context) }
 
-    NavHost(navController, startDestination = Routes.HabitList) {
-        // Экран списка привычек
-        composable(Routes.HabitList) {
+    DisposableEffect(Unit) {
+        onDispose {
+            interstitialAdManager.destroy()
+        }
+    }
+
+    NavHost(navController = navController, startDestination = "habitList") {
+        composable("habitList") {
             HabitListScreen(
                 viewModel = viewModel,
-                onAddHabit = { navController.navigate(Routes.AddHabit) },
-                onEditHabit = { habit ->
-                    navController.navigate("edit_habit/${habit.id}")
+                onAddHabit = {
+                    interstitialAdManager.showAd(context as Activity) {
+                        navController.navigate("addHabit")
+                    }
                 },
-                onOpenStats = { navController.navigate(Routes.Stats) } // ✅ Добавлен переход к статистике
+                onEditHabit = { habit ->
+                    interstitialAdManager.showAd(context as Activity) {
+                        navController.navigate("editHabit/${habit.id}")
+                    }
+                },
+                onOpenStats = {
+                    interstitialAdManager.showAd(context as Activity) {
+                        navController.navigate("habitStats")
+                    }
+                }
             )
         }
 
-        // Экран добавления привычки
-        composable(Routes.AddHabit) {
+        composable("addHabit") {
             AddHabitScreen(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // Экран редактирования привычки
-        composable(
-            route = Routes.EditHabit,
-            arguments = listOf(
-                navArgument("habitId") {
-                    type = NavType.IntType
-                }
+        composable("editHabit/{habitId}") { backStackEntry ->
+            val habitId = backStackEntry.arguments?.getString("habitId")?.toIntOrNull() ?: return@composable
+            EditHabitScreen(
+                habitId = habitId,
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
             )
-        ) { backStackEntry ->
-            val habitId = backStackEntry.arguments?.getInt("habitId")
-            if (habitId != null) {
-                EditHabitScreen(
-                    viewModel = viewModel,
-                    habitId = habitId,
-                    onBack = { navController.popBackStack() }
-                )
-            }
         }
 
-        // Экран статистики
-        composable(Routes.Stats) {
-            val habitsState = viewModel.allHabits.collectAsStateWithLifecycle(initialValue = emptyList())
-            val habits = habitsState.value
+        composable("habitStats") {
             HabitStatsScreen(
                 viewModel = statsViewModel,
-                habits = habits,
+                habits = viewModel.allHabits.value,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
