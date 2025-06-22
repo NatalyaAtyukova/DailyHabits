@@ -13,8 +13,8 @@ android {
         applicationId = "com.habittracker.dailyhabits"
         minSdk = 29
         targetSdk = 35
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 4
+        versionName = "2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -83,5 +83,10 @@ dependencies {
     implementation(libs.charts)
 
     // Yandex Mobile Ads
-    implementation("com.yandex.android:mobileads:6.4.0")
+    implementation("com.yandex.android:mobileads:7.11.0")
+
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.github.fracassi-marco:JetChart:1.4.1")
+
+    implementation("com.google.accompanist:accompanist-flowlayout:0.28.0")
 }

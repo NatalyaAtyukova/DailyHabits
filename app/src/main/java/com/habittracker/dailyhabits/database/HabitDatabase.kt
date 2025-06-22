@@ -9,7 +9,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.habittracker.dailyhabits.model.Habit
 
-@Database(entities = [Habit::class], version = 3, exportSchema = false)
+@Database(entities = [Habit::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class HabitDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
@@ -20,13 +20,17 @@ abstract class HabitDatabase : RoomDatabase() {
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE habits ADD COLUMN deadline INTEGER DEFAULT NULL")
-            }
-        }
+                db.execSQL("ALTER TABLE habits ADD COLUMN type TEXT NOT NULL DEFAULT 'SIMPLE'")
+                db.execSQL("ALTER TABLE habits ADD COLUMN targetValue REAL")
+                db.execSQL("ALTER TABLE habits ADD COLUMN unit TEXT")
+                db.execSQL("ALTER TABLE habits ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'")
+                db.execSQL("ALTER TABLE habits ADD COLUMN reminderTime TEXT")
+                db.execSQL("ALTER TABLE habits ADD COLUMN repeatDays TEXT NOT NULL DEFAULT '[]'")
 
-        private val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("ALTER TABLE habits ADD COLUMN dailyStatus TEXT DEFAULT '{}' NOT NULL")
+                // Преобразование dailyStatus из Map<Long, Boolean> в Map<Long, Float>
+                // Мы читаем старые данные, конвертируем их и записываем обратно.
+                // Этот код просто заменяет старые boolean значения на 0.0 или 1.0
+                db.execSQL("UPDATE habits SET dailyStatus = REPLACE(REPLACE(dailyStatus, 'true', '1.0'), 'false', '0.0')")
             }
         }
 
@@ -37,8 +41,8 @@ abstract class HabitDatabase : RoomDatabase() {
                     HabitDatabase::class.java,
                     "habit_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
-                    .build()
+                .addMigrations(MIGRATION_1_2)
+                .build()
                 INSTANCE = instance
                 instance
             }

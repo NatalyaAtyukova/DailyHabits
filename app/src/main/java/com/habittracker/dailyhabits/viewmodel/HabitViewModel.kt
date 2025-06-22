@@ -1,178 +1,187 @@
 package com.habittracker.dailyhabits.viewmodel
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.habittracker.dailyhabits.database.HabitDao
 import com.habittracker.dailyhabits.model.Habit
+import com.habittracker.dailyhabits.services.ReminderManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlin.math.max
+import com.habittracker.dailyhabits.model.HabitStats
+import com.habittracker.dailyhabits.gui.screen.StatsPeriod
 import java.util.*
-import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
-class HabitViewModel(private val habitDao: HabitDao) : ViewModel() {
+class HabitViewModel(
+    private val habitDao: HabitDao,
+    private val reminderManager: ReminderManager
+) : ViewModel() {
 
     private val _allHabits = MutableStateFlow<List<Habit>>(emptyList())
     val allHabits: StateFlow<List<Habit>> = _allHabits
 
-    private val _selectedHabit = MutableStateFlow<Habit?>(null)
-    val selectedHabit: StateFlow<Habit?> = _selectedHabit
+    private val _filteredHabits = MutableStateFlow<List<Habit>>(emptyList())
+    val filteredHabits: StateFlow<List<Habit>> = _filteredHabits
+
+    private val _tags = MutableStateFlow<List<String>>(emptyList())
+    val tags: StateFlow<List<String>> = _tags
+
+    private val _selectedTag = MutableStateFlow<String?>(null)
+    val selectedTag: StateFlow<String?> = _selectedTag
+
+    private val _habitStats = MutableStateFlow(HabitStats())
+    val habitStats: StateFlow<HabitStats> = _habitStats
+
+    private val habitStatsCache = mutableMapOf<Int, HabitStats>()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             habitDao.getAllHabits().collect { habits ->
                 _allHabits.value = habits
-                android.util.Log.d("HabitViewModel", "Habits updated: ${habits.map { it.id to it.dailyStatus }}")
+                _filteredHabits.value = habits
+                _tags.value = habits.flatMap { it.tags }.distinct()
             }
         }
     }
 
+    fun selectTag(tag: String?) {
+        _selectedTag.value = tag
+        filterHabitsByTag(tag)
+    }
+
+    fun filterHabitsByTag(tag: String?) {
+        if (tag == null) {
+            _filteredHabits.value = _allHabits.value
+        } else {
+            _filteredHabits.value = _allHabits.value.filter { it.tags.contains(tag) }
+        }
+    }
+
+    fun getHabitById(id: Int): Flow<Habit?> {
+        return habitDao.getHabitById(id)
+    }
+
     fun addHabit(habit: Habit) {
-        viewModelScope.launch {
-            val deviceTime = System.currentTimeMillis()
-            val today = getStartOfToday(deviceTime)
-            
-            android.util.Log.d("HabitViewModel", "Adding new habit:")
-            android.util.Log.d("HabitViewModel", "Device time: ${Date(deviceTime)}")
-            android.util.Log.d("HabitViewModel", "Normalized today: ${Date(today)}")
-            
+        viewModelScope.launch(Dispatchers.IO) {
             val newHabit = habit.copy(
-                timestamp = today,
+                timestamp = System.currentTimeMillis(),
                 dailyStatus = emptyMap()
             )
-            habitDao.insertHabit(newHabit)
+            val newId = habitDao.insertHabit(newHabit)
+            reminderManager.scheduleReminder(newHabit.copy(id = newId.toInt()))
         }
     }
 
     fun deleteHabit(habit: Habit) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             habitDao.deleteHabit(habit)
+            reminderManager.cancelReminder(habit.id)
         }
     }
 
     fun updateHabit(habit: Habit) {
-        viewModelScope.launch {
-            val deviceTime = System.currentTimeMillis()
-            android.util.Log.d("HabitViewModel", "Updating habit ${habit.id}:")
-            android.util.Log.d("HabitViewModel", "Device time: ${Date(deviceTime)}")
-            android.util.Log.d("HabitViewModel", "Original deadline: ${habit.deadline?.let { Date(it) }}")
-            
-            val updatedHabit = habit.copy(
-                deadline = habit.deadline?.let { getStartOfDay(it) }
-            )
-            
-            android.util.Log.d("HabitViewModel", "Normalized deadline: ${updatedHabit.deadline?.let { Date(it) }}")
-            habitDao.updateHabit(updatedHabit)
+        viewModelScope.launch(Dispatchers.IO) {
+            habitDao.updateHabit(habit)
+            reminderManager.scheduleReminder(habit)
         }
     }
 
-    fun editHabit(habit: Habit) {
-        _selectedHabit.value = habit
-    }
-
-    suspend fun getHabitById(habitId: Int): Habit? {
-        return habitDao.getHabitById(habitId)
-    }
-
-    fun updateHabitStatus(habit: Habit, date: Long, isCompleted: Boolean?) {
-        viewModelScope.launch {
-            val normalizedDate = getStartOfDay(date)
-            android.util.Log.d("HabitViewModel", "Updating status for date ${Date(normalizedDate)}: habitId=${habit.id}, isCompleted=$isCompleted")
-            
-            val updatedDailyStatus = habit.dailyStatus.toMutableMap().apply {
-                if (isCompleted == null) {
-                    remove(normalizedDate)
-                } else {
-                    put(normalizedDate, isCompleted)
-                }
-            }.toMap()
-            
-            val updatedHabit = habit.copy(dailyStatus = updatedDailyStatus)
-            habitDao.updateHabit(updatedHabit)
-            
-            android.util.Log.d("HabitViewModel", "Status updated. Old status: ${habit.dailyStatus}")
-            android.util.Log.d("HabitViewModel", "New status: $updatedDailyStatus")
+    fun updateHabitStatus(habit: Habit, date: Long, value: Float?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updatedStatus = habit.dailyStatus.toMutableMap()
+            if (value == null) {
+                updatedStatus.remove(date)
+            } else {
+                updatedStatus[date] = value
+            }
+            habitDao.updateHabit(habit.copy(dailyStatus = updatedStatus))
         }
     }
 
-    fun calculateProgress(habit: Habit): Triple<Float, Int, Int> {
-        val deviceTime = System.currentTimeMillis()
-        val now = getStartOfToday(deviceTime)
-        val dayInMillis = 24 * 60 * 60 * 1000L
+    fun calculateHabitStats(habits: List<Habit>, period: StatsPeriod = StatsPeriod.WEEK) {
+        val calendar = Calendar.getInstance()
+        val endDate = calendar.apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
 
-        // Определяем период для расчета прогресса
-        val startDate = habit.timestamp
-        val endDate = minOf(habit.deadline ?: now, now)
+        val startDate = calendar.apply {
+            add(Calendar.DAY_OF_YEAR, -period.days)
+        }.timeInMillis
 
-        var completedDays = 0
-        var skippedDays = 0
+        var totalCompleted = 0
+        var totalMissed = 0
+        var maxStreak = 0
+        var totalDays = 0
+
+        habits.forEach { habit ->
+            val stats = calculateSingleHabitStats(habit, startDate, endDate)
+            totalCompleted += stats.completedDays
+            totalMissed += stats.missedDays
+            maxStreak = maxOf(maxStreak, stats.longestStreak)
+            totalDays += stats.totalDays
+        }
+
+        val averageCompletion = if (totalDays > 0) {
+            (totalCompleted.toFloat() / totalDays * 100).roundToInt().toFloat()
+        } else 0f
+
+        _habitStats.value = HabitStats(
+            averageCompletion = averageCompletion,
+            longestStreak = maxStreak,
+            missedDays = totalMissed,
+            totalHabits = habits.size,
+            completedDays = totalCompleted,
+            totalDays = totalDays
+        )
+    }
+
+    fun getHabitStats(habit: Habit): HabitStats? {
+        return habitStatsCache[habit.id]
+    }
+
+    private fun calculateSingleHabitStats(
+        habit: Habit,
+        startDate: Long,
+        endDate: Long
+    ): HabitStats {
+        var completed = 0
+        var missed = 0
         var currentStreak = 0
         var maxStreak = 0
+        var totalDays = 0
 
-        // Проходим по всем дням от начала до текущей даты
         var currentDate = startDate
         while (currentDate <= endDate) {
+            totalDays++
             val status = habit.dailyStatus[currentDate]
-            val isPastDay = currentDate < (now - dayInMillis)
-
-            when {
-                status == true -> {
-                    completedDays++
-                    currentStreak++
-                    maxStreak = maxOf(maxStreak, currentStreak)
-                }
-                status == false || (status == null && isPastDay) -> {
-                    skippedDays++
+            if (status != null && status > 0f) {
+                completed++
+                currentStreak++
+                maxStreak = maxOf(maxStreak, currentStreak)
+            } else {
+                if (currentDate < System.currentTimeMillis()) {
+                    missed++
                     currentStreak = 0
                 }
             }
-            currentDate += dayInMillis
+            currentDate += 24 * 60 * 60 * 1000 // Добавляем один день
         }
 
-        // Считаем только прошедшие дни для прогресса
-        val totalPassedDays = ((endDate - startDate) / dayInMillis).toInt() + 1
-        
-        android.util.Log.d("HabitViewModel", """Progress calculation:
-            |habitId: ${habit.id}
-            |name: ${habit.name}
-            |startDate: ${Date(startDate)}
-            |endDate: ${Date(endDate)}
-            |now: ${Date(now)}
-            |device time: ${Date(deviceTime)}
-            |totalPassedDays: $totalPassedDays
-            |completedDays: $completedDays
-            |skippedDays: $skippedDays
-            |maxStreak: $maxStreak
-            |dailyStatus: ${habit.dailyStatus.map { (date, status) -> "${Date(date)}: $status" }}
-        """.trimMargin())
+        val stats = HabitStats(
+            averageCompletion = if (totalDays > 0) {
+                (completed.toFloat() / totalDays * 100).roundToInt().toFloat()
+            } else 0f,
+            longestStreak = maxStreak,
+            missedDays = missed,
+            completedDays = completed,
+            totalDays = totalDays
+        )
 
-        val progress = if (totalPassedDays > 0) {
-            completedDays.toFloat() / totalPassedDays.toFloat()
-        } else {
-            0f
-        }
-
-        return Triple(progress.coerceIn(0f, 1f), skippedDays, maxStreak)
-    }
-
-    private fun getStartOfToday(deviceTime: Long = System.currentTimeMillis()): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = deviceTime
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
-
-    private fun getStartOfDay(date: Long): Long {
-        return Calendar.getInstance().apply {
-            timeInMillis = date
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        habitStatsCache[habit.id] = stats
+        return stats
     }
 }

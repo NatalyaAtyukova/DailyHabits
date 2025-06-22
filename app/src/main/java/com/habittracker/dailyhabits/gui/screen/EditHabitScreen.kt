@@ -1,48 +1,59 @@
 package com.habittracker.dailyhabits.gui.screen
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.platform.LocalContext
-import com.habittracker.dailyhabits.model.Habit
-import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import androidx.compose.ui.Alignment
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import com.habittracker.dailyhabits.model.Habit
+import com.habittracker.dailyhabits.model.HabitType
+import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.navigation.NavController
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditHabitScreen(
-    viewModel: HabitViewModel,
-    habitId: Int,
-    onBack: () -> Unit
+    habitViewModel: HabitViewModel,
+    navController: NavController,
+    habitId: Int
 ) {
-    val habit = produceState<Habit?>(initialValue = null, habitId) {
-        value = viewModel.getHabitById(habitId)
-    }.value
+    val habitState = habitViewModel.getHabitById(habitId).collectAsState(initial = null)
+    val habit = habitState.value
 
     val context = LocalContext.current
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
 
-    habit?.let { currentHabit ->
-        var name by remember { mutableStateOf(currentHabit.name) }
-        var description by remember { mutableStateOf(currentHabit.description) }
-        var deadline by remember { mutableStateOf(currentHabit.deadline) }
+    if (habit != null) {
+        var name by remember { mutableStateOf(habit.name) }
+        var description by remember { mutableStateOf(habit.description) }
+        var deadline by remember { mutableStateOf(habit.deadline) }
+        var habitType by remember { mutableStateOf(habit.type) }
+        var targetValue by remember { mutableStateOf(habit.targetValue?.toString() ?: "") }
+        var unit by remember { mutableStateOf(habit.unit ?: "") }
+        var tags by remember { mutableStateOf(habit.tags) }
+        var tagInput by remember { mutableStateOf("") }
+        var reminderTime by remember { mutableStateOf(habit.reminderTime) }
+        var repeatDays by remember { mutableStateOf(habit.repeatDays.toSet()) }
 
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = { Text("Редактирование") },
                     navigationIcon = {
-                        IconButton(onClick = onBack) {
+                        IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                         }
                     },
@@ -141,6 +152,130 @@ fun EditHabitScreen(
                     }
                 }
 
+                // Переключатель типа привычки
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Тип привычки:", style = MaterialTheme.typography.bodyLarge)
+                    FilterChip(
+                        selected = habitType == HabitType.SIMPLE,
+                        onClick = { habitType = HabitType.SIMPLE },
+                        label = { Text("Обычная") }
+                    )
+                    FilterChip(
+                        selected = habitType == HabitType.MEASURABLE,
+                        onClick = { habitType = HabitType.MEASURABLE },
+                        label = { Text("Измеряемая") }
+                    )
+                }
+
+                // Поля для измеряемой привычки
+                if (habitType == HabitType.MEASURABLE) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = targetValue,
+                            onValueChange = { targetValue = it.filter { c -> c.isDigit() || c == '.' } },
+                            label = { Text("Цель") },
+                            modifier = Modifier.weight(1f),
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                        )
+                        OutlinedTextField(
+                            value = unit,
+                            onValueChange = { unit = it },
+                            label = { Text("Ед. изм.") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                // Поле для тегов
+                OutlinedTextField(
+                    value = tagInput,
+                    onValueChange = {
+                        tagInput = it
+                        if (it.contains(",")) {
+                            val newTags = it.split(",")
+                                .map { tag -> tag.trim() }
+                                .filter { tag -> tag.isNotBlank() }
+                            tags = (tags + newTags).distinct()
+                            tagInput = ""
+                        }
+                    },
+                    label = { Text("Теги (через запятую)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Отображение добавленных тегов
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    tags.forEach { tag ->
+                        InputChip(
+                            selected = false,
+                            onClick = { },
+                            label = { Text(tag) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Удалить тег",
+                                    modifier = Modifier.size(18.dp).clickable {
+                                        tags = tags - tag
+                                    }
+                                )
+                            }
+                        )
+                    }
+                }
+
+                // Настройка повторов и напоминаний
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("Напоминания и повторы", style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Выбор времени
+                        val timePickerDialog = TimePickerDialog(
+                            context,
+                            { _, hour, minute ->
+                                reminderTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
+                            }, 12, 0, true
+                        )
+
+                        Button(onClick = { timePickerDialog.show() }) {
+                            Text(reminderTime ?: "Выбрать время напоминания")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Выбор дней недели
+                        val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            weekDays.forEachIndexed { index, day ->
+                                val dayOfWeek = index + 1
+                                FilterChip(
+                                    selected = repeatDays.contains(dayOfWeek),
+                                    onClick = {
+                                        repeatDays = if (repeatDays.contains(dayOfWeek)) {
+                                            repeatDays - dayOfWeek
+                                        } else {
+                                            repeatDays + dayOfWeek
+                                        }
+                                    },
+                                    label = { Text(day) }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.weight(1f))
 
                 Row(
@@ -150,7 +285,7 @@ fun EditHabitScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
-                        onClick = { onBack() },
+                        onClick = { navController.popBackStack() },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.error
@@ -161,14 +296,20 @@ fun EditHabitScreen(
 
                     Button(
                         onClick = {
-                            viewModel.updateHabit(
-                                currentHabit.copy(
+                            habitViewModel.updateHabit(
+                                habit.copy(
                                     name = name,
                                     description = description,
-                                    deadline = deadline
+                                    deadline = deadline,
+                                    type = habitType,
+                                    targetValue = targetValue.toFloatOrNull(),
+                                    unit = unit.takeIf { it.isNotBlank() },
+                                    tags = tags,
+                                    reminderTime = reminderTime,
+                                    repeatDays = repeatDays.toList()
                                 )
                             )
-                            onBack()
+                            navController.popBackStack()
                         },
                         enabled = name.isNotBlank(),
                         modifier = Modifier.weight(1f),
@@ -182,16 +323,9 @@ fun EditHabitScreen(
                 }
             }
         }
-    } ?: run {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                "Привычка не найдена",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.error
-            )
+    } else {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
         }
     }
 }

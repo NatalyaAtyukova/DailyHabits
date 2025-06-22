@@ -18,10 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.habittracker.dailyhabits.model.Habit
+import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.min
@@ -29,7 +31,7 @@ import kotlin.math.min
 @Composable
 fun HabitProgressTracker(
     habit: Habit,
-    onUpdateStatus: (Habit, Long, Boolean?) -> Unit
+    onUpdateStatus: (date: Long, value: Float?) -> Unit
 ) {
     val deviceTime = System.currentTimeMillis()
     var currentPeriodStart by remember { mutableStateOf(
@@ -164,7 +166,7 @@ private fun DayProgressItem(
     timestamp: Long,
     habit: Habit,
     isToday: Boolean,
-    onUpdateStatus: (Habit, Long, Boolean?) -> Unit
+    onUpdateStatus: (date: Long, value: Float?) -> Unit
 ) {
     val deviceTime = System.currentTimeMillis()
     val dateFormatter = SimpleDateFormat("EE\ndd", Locale.getDefault())
@@ -181,8 +183,8 @@ private fun DayProgressItem(
     """.trimMargin())
     
     // Если день прошел и статус не установлен, считаем его пропущенным
-    val status = when {
-        actualStatus != null -> actualStatus
+    val status: Boolean? = when {
+        actualStatus != null -> actualStatus >= 1f
         isPastDay -> false
         else -> null
     }
@@ -193,125 +195,104 @@ private fun DayProgressItem(
         true -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
         false -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
         null -> if (isPastDay) MaterialTheme.colorScheme.error.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
+        else -> MaterialTheme.colorScheme.surface
     }
 
     val borderColor = when {
         isToday -> MaterialTheme.colorScheme.primary
-        status == true -> MaterialTheme.colorScheme.tertiary
-        status == false -> MaterialTheme.colorScheme.error
-        isPastDay -> MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+        status == true -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+        status == false -> MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+        isPastDay -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
         else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
     }
 
-    val icon = when (status) {
+    val contentColor = when (status) {
+        true -> MaterialTheme.colorScheme.onTertiaryContainer
+        false -> MaterialTheme.colorScheme.onErrorContainer
+        null -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    val icon: ImageVector? = when (status) {
         true -> Icons.Default.Check
         false -> Icons.Default.Close
-        null -> if (isPastDay) Icons.Default.Warning else null
+        null -> null
     }
 
-    val iconTint = when (status) {
-        true -> MaterialTheme.colorScheme.tertiary
-        false -> MaterialTheme.colorScheme.error
-        null -> if (isPastDay) MaterialTheme.colorScheme.error.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface
+    val clickableModifier = if (timestamp <= now) {
+        Modifier.clickable { showMenu = true }
+    } else {
+        Modifier
     }
 
-    Box(
-        modifier = Modifier.wrapContentSize(Alignment.TopStart)
-    ) {
+    Box(modifier = clickableModifier) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
+                .size(width = 48.dp, height = 64.dp)
+                .clip(RoundedCornerShape(8.dp))
                 .background(backgroundColor)
                 .border(
-                    width = if (isToday) 2.dp else 1.dp,
+                    width = 1.5.dp,
                     color = borderColor,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(8.dp)
                 )
-                .clickable { showMenu = true }
-                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .padding(4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = dateFormatter.format(Date(timestamp)).uppercase(),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                text = dateFormatter.format(Date(timestamp)),
                 textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall,
+                color = contentColor,
                 fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
             )
-            
             Spacer(modifier = Modifier.height(4.dp))
-            
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(if (icon != null) backgroundColor else Color.Transparent),
-                contentAlignment = Alignment.Center
+            AnimatedVisibility(
+                visible = status != null,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut()
             ) {
                 icon?.let {
                     Icon(
                         imageVector = it,
-                        contentDescription = when (status) {
-                            true -> "Выполнено"
-                            false -> "Пропущено"
-                            null -> if (isPastDay) "Автоматически пропущено" else "Не отмечено"
-                        },
-                        tint = iconTint,
-                        modifier = Modifier.size(16.dp)
+                        contentDescription = "Status",
+                        tint = contentColor,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
         }
 
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
-        ) {
-            DropdownMenuItem(
-                text = { Text("Выполнено") },
-                onClick = {
-                    android.util.Log.d("DayProgressItem", "Setting status to TRUE for ${Date(timestamp)}")
-                    onUpdateStatus(habit, timestamp, true)
-                    showMenu = false
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            )
-            DropdownMenuItem(
-                text = { Text("Пропущено") },
-                onClick = {
-                    android.util.Log.d("DayProgressItem", "Setting status to FALSE for ${Date(timestamp)}")
-                    onUpdateStatus(habit, timestamp, false)
-                    showMenu = false
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            )
-            DropdownMenuItem(
-                text = { Text("Не отмечено") },
-                onClick = {
-                    android.util.Log.d("DayProgressItem", "Setting status to NULL for ${Date(timestamp)}")
-                    onUpdateStatus(habit, timestamp, null)
-                    showMenu = false
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Remove,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            )
+        if (timestamp <= now) {
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Выполнено") },
+                    onClick = {
+                        onUpdateStatus(timestamp, 1f)
+                        showMenu = false
+                    },
+                    leadingIcon = { Icon(Icons.Default.Check, null) }
+                )
+                DropdownMenuItem(
+                    text = { Text("Пропущено") },
+                    onClick = {
+                        onUpdateStatus(timestamp, 0f)
+                        showMenu = false
+                    },
+                    leadingIcon = { Icon(Icons.Default.Close, null) }
+                )
+                DropdownMenuItem(
+                    text = { Text("Не учитывать") },
+                    onClick = {
+                        onUpdateStatus(timestamp, null)
+                        showMenu = false
+                    },
+                    leadingIcon = { Icon(Icons.Default.Remove, null) }
+                )
+            }
         }
     }
 }

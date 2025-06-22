@@ -26,24 +26,24 @@ import com.github.mikephil.charting.formatter.PercentFormatter
 import com.github.mikephil.charting.utils.ColorTemplate
 import com.habittracker.dailyhabits.model.Habit
 import com.habittracker.dailyhabits.model.HabitStats
-import com.habittracker.dailyhabits.viewmodel.HabitStatsViewModel
+import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitStatsScreen(
-    viewModel: HabitStatsViewModel,
-    habits: List<Habit>,
-    onNavigateBack: () -> Unit
+    habitViewModel: HabitViewModel,
+    onBack: () -> Unit
 ) {
+    val habits by habitViewModel.allHabits.collectAsState()
     var selectedPeriod by remember { mutableStateOf(StatsPeriod.WEEK) }
 
     LaunchedEffect(habits, selectedPeriod) {
-        viewModel.calculateHabitStats(habits, selectedPeriod)
+        habitViewModel.calculateHabitStats(habits, selectedPeriod)
     }
 
-    val habitStats by viewModel.habitStats.collectAsState()
+    val habitStats by habitViewModel.habitStats.collectAsState()
 
     Scaffold(
         topBar = {
@@ -56,7 +56,7 @@ fun HabitStatsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Назад",
@@ -102,7 +102,7 @@ fun HabitStatsScreen(
             }
 
             items(habits) { habit ->
-                HabitStatsCard(habit, viewModel.getHabitStats(habit))
+                HabitStatsCard(habit, habitViewModel.getHabitStats(habit))
             }
         }
     }

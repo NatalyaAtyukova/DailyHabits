@@ -15,10 +15,10 @@ interface HabitDao {
     fun getAllHabits(): Flow<List<Habit>>
 
     @Query("SELECT * FROM habits WHERE id = :habitId LIMIT 1")
-    suspend fun getHabitById(habitId: Int): Habit?
+    fun getHabitById(habitId: Int): Flow<Habit?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertHabit(habit: Habit)
+    suspend fun insertHabit(habit: Habit): Long
 
     @Delete
     suspend fun deleteHabit(habit: Habit)
