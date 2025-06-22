@@ -15,15 +15,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.PercentFormatter
-import com.github.mikephil.charting.utils.ColorTemplate
 import com.habittracker.dailyhabits.model.Habit
 import com.habittracker.dailyhabits.model.HabitStats
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
@@ -73,39 +74,79 @@ fun HabitStatsScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            // Общая статистика
-            item {
-                OverallStatsCard(habitStats)
+        if (habits.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QueryStats,
+                        contentDescription = "Нет данных",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                        modifier = Modifier.size(80.dp)
+                    )
+                    Text(
+                        "Нет данных для статистики",
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        "Начните выполнять привычки, и здесь появится подробный анализ вашего прогресса.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(vertical = 16.dp)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                item {
+                    OverallStatsCard(habitStats)
+                }
+                item {
+                    CompletionChartCard(habitStats)
+                }
+                item {
+                    Text(
+                        text = "Статистика по привычкам",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+                    )
+                }
 
-            // График выполнения
-            item {
-                CompletionChartCard(habitStats)
-            }
-
-            // Статистика по отдельным привычкам
-            item {
-                Text(
-                    text = "Статистика по привычкам",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
-                )
-            }
-
-            items(habits) { habit ->
-                HabitStatsCard(habit, habitViewModel.getHabitStats(habit))
+                items(habits) { habit ->
+                    HabitStatsCard(habit, habitViewModel.getHabitStats(habit))
+                }
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
     }
+}
+
+enum class StatsPeriod(val title: String, val days: Int) {
+    WEEK("Неделя", 7),
+    MONTH("Месяц", 30),
+    ALL("Все время", -1) // -1 для обозначения всего периода
 }
 
 @Composable
@@ -115,27 +156,17 @@ private fun PeriodSelector(
 ) {
     Row(
         modifier = Modifier
-            .padding(8.dp)
+            .padding(horizontal = 8.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surface)
     ) {
         StatsPeriod.values().forEach { period ->
             TextButton(
                 onClick = { onPeriodSelected(period) },
+                shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = if (selectedPeriod == period)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                modifier = Modifier
-                    .background(
-                        if (selectedPeriod == period)
-                            MaterialTheme.colorScheme.primaryContainer
-                        else
-                            Color.Transparent
-                    )
-                    .padding(horizontal = 8.dp)
+                    containerColor = if (selectedPeriod == period) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                    contentColor = if (selectedPeriod == period) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             ) {
                 Text(
                     text = period.title,
@@ -152,77 +183,32 @@ private fun OverallStatsCard(stats: HabitStats) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            StatRow(
-                icon = Icons.Default.Timeline,
-                label = "Среднее выполнение",
-                value = "${stats.averageCompletion.toInt()}%",
-                color = MaterialTheme.colorScheme.primary
-            )
-            StatRow(
-                icon = Icons.Default.Whatshot,
-                label = "Лучшая серия",
-                value = "${stats.longestStreak} дней",
-                color = MaterialTheme.colorScheme.tertiary
-            )
-            StatRow(
-                icon = Icons.Default.Warning,
-                label = "Пропущено дней",
-                value = "${stats.missedDays}",
-                color = MaterialTheme.colorScheme.error
-            )
-            StatRow(
-                icon = Icons.Default.CheckCircle,
-                label = "Всего привычек",
-                value = "${stats.totalHabits}",
-                color = MaterialTheme.colorScheme.secondary
-            )
+            StatRow(Icons.Default.TrendingUp, "Среднее выполнение", "${stats.averageCompletion.toInt()}%", MaterialTheme.colorScheme.primary)
+            StatRow(Icons.Default.Whatshot, "Лучшая серия", "${stats.longestStreak} дней", MaterialTheme.colorScheme.tertiary)
+            StatRow(Icons.Default.HighlightOff, "Пропущено дней", "${stats.missedDays}", MaterialTheme.colorScheme.error)
+            StatRow(Icons.Default.CheckCircle, "Всего выполнено", "${stats.completedDays} раз", MaterialTheme.colorScheme.secondary)
         }
     }
 }
 
 @Composable
-private fun StatRow(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    color: Color
-) {
+private fun StatRow(icon: ImageVector, label: String, value: String, color: Color) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(24.dp)
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Icon(imageVector = icon, contentDescription = label, tint = color)
+            Text(text = label, style = MaterialTheme.typography.bodyLarge)
         }
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = color,
-            fontWeight = FontWeight.Bold
-        )
+        Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -231,24 +217,81 @@ private fun CompletionChartCard(stats: HabitStats) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Выполнение привычек",
+                text = "Соотношение выполнения",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 16.dp)
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
             )
-            
-            HabitPieChart(stats.averageCompletion, stats.missedDays)
+            HabitPieChart(stats)
         }
     }
+}
+
+@Composable
+private fun HabitPieChart(stats: HabitStats) {
+    val completed = stats.completedDays.toFloat()
+    val missed = stats.missedDays.toFloat()
+
+    val total = completed + missed
+    if (total == 0f) {
+        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+            Text("Нет данных за выбранный период")
+        }
+        return
+    }
+
+    val entries = listOf(
+        PieEntry(completed, "Выполнено"),
+        PieEntry(missed, "Пропущено")
+    )
+
+    val colors = listOf(
+        MaterialTheme.colorScheme.primary.toArgb(),
+        MaterialTheme.colorScheme.errorContainer.toArgb()
+    )
+    
+    val textColor = MaterialTheme.colorScheme.onPrimary.toArgb()
+
+    AndroidView(
+        factory = { context ->
+            PieChart(context).apply {
+                description.isEnabled = false
+                isDrawHoleEnabled = true
+                holeRadius = 58f
+                setHoleColor(Color.Transparent.toArgb())
+                transparentCircleRadius = 61f
+                setUsePercentValues(true)
+                animateY(1400)
+
+                legend.apply {
+                    verticalAlignment = Legend.LegendVerticalAlignment.CENTER
+                    horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+                    orientation = Legend.LegendOrientation.VERTICAL
+                    setDrawInside(false)
+                    textSize = 12f
+                }
+            }
+        },
+        update = { chart ->
+            val dataSet = PieDataSet(entries, "").apply {
+                sliceSpace = 3f
+                this.colors = colors
+                valueTextSize = 12f
+                valueTextColor = textColor
+            }
+            chart.data = PieData(dataSet).apply {
+                setValueFormatter(PercentFormatter(chart))
+            }
+            chart.invalidate()
+        },
+        modifier = Modifier.fillMaxWidth().height(200.dp)
+    )
 }
 
 @Composable
@@ -257,144 +300,45 @@ private fun HabitStatsCard(habit: Habit, stats: HabitStats?) {
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(2.dp)
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(1.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = habit.name,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
+            Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
-                StatisticItem(
-                    icon = Icons.Default.Timeline,
-                    value = "${stats.averageCompletion.toInt()}%",
-                    label = "Выполнение",
-                    color = MaterialTheme.colorScheme.primary
-                )
-                StatisticItem(
-                    icon = Icons.Default.Whatshot,
-                    value = "${stats.longestStreak}",
-                    label = "Серия",
-                    color = MaterialTheme.colorScheme.tertiary
-                )
-                StatisticItem(
-                    icon = Icons.Default.Warning,
-                    value = "${stats.missedDays}",
-                    label = "Пропущено",
-                    color = MaterialTheme.colorScheme.error
-                )
+                StatItem("Выполнено", "${stats.completedDays} дн.", MaterialTheme.colorScheme.primary)
+                StatItem("Пропущено", "${stats.missedDays} дн.", MaterialTheme.colorScheme.error)
+                StatItem("Серия", "${stats.longestStreak} дн.", MaterialTheme.colorScheme.tertiary)
             }
         }
     }
 }
 
 @Composable
-private fun StatisticItem(
-    icon: ImageVector,
-    value: String,
-    label: String,
-    color: Color
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(24.dp)
-        )
+private fun StatItem(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium,
-            color = color,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = color
         )
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
-@Composable
-private fun HabitPieChart(completedPercentage: Float, missedDays: Int) {
-    AndroidView(
-        factory = { context ->
-            PieChart(context).apply {
-                description.isEnabled = false
-                isDrawHoleEnabled = true
-                setHoleColor(android.graphics.Color.TRANSPARENT)
-                setTransparentCircleColor(android.graphics.Color.WHITE)
-                setTransparentCircleAlpha(110)
-                holeRadius = 58f
-                transparentCircleRadius = 61f
-                setDrawCenterText(true)
-                rotationAngle = 0f
-                isRotationEnabled = true
-                isHighlightPerTapEnabled = true
-                setEntryLabelColor(android.graphics.Color.WHITE)
-                setEntryLabelTextSize(12f)
-                setUsePercentValues(true)
-                
-                centerText = "Выполнение\n${completedPercentage.toInt()}%"
-                setCenterTextSize(16f)
-                setCenterTextTypeface(android.graphics.Typeface.DEFAULT_BOLD)
-                
-                legend.apply {
-                    isEnabled = true
-                    verticalAlignment = Legend.LegendVerticalAlignment.BOTTOM
-                    horizontalAlignment = Legend.LegendHorizontalAlignment.CENTER
-                    orientation = Legend.LegendOrientation.HORIZONTAL
-                    setDrawInside(false)
-                    textSize = 12f
-                }
-
-                val entries = listOf(
-                    PieEntry(completedPercentage, "Выполнено"),
-                    PieEntry(100f - completedPercentage, "Пропущено")
-                )
-
-                val dataSet = PieDataSet(entries, "").apply {
-                    colors = listOf(
-                        android.graphics.Color.parseColor("#4CAF50"),  // Зеленый
-                        android.graphics.Color.parseColor("#F44336")   // Красный
-                    )
-                    valueTextSize = 14f
-                    valueTextColor = android.graphics.Color.WHITE
-                    valueFormatter = PercentFormatter()
-                }
-
-                data = PieData(dataSet).apply {
-                    setValueFormatter(PercentFormatter())
-                }
-                invalidate()
-            }
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(300.dp)
-    )
-}
-
-enum class StatsPeriod(val title: String, val days: Int) {
-    WEEK("Неделя", 7),
-    MONTH("Месяц", 30),
-    YEAR("Год", 365)
-}
+private val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

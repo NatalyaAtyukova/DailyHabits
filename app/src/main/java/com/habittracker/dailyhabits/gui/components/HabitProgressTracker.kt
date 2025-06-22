@@ -35,7 +35,7 @@ fun HabitProgressTracker(
 ) {
     val deviceTime = System.currentTimeMillis()
     var currentPeriodStart by remember { mutableStateOf(
-        Calendar.getInstance().apply {
+        Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             timeInMillis = deviceTime
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -48,14 +48,14 @@ fun HabitProgressTracker(
     android.util.Log.d("HabitProgressTracker", "Current period start: ${Date(currentPeriodStart)}")
 
     // Определяем конечную дату (deadline или текущая дата + 30 дней если deadline не установлен)
-    val endDate = habit.deadline ?: Calendar.getInstance().apply {
+    val endDate = habit.deadline ?: Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
         timeInMillis = deviceTime
         add(Calendar.DAY_OF_YEAR, 30)
     }.timeInMillis
 
     // Получаем дни для текущего периода (7 дней)
     val days = mutableListOf<Long>()
-    val calendar = Calendar.getInstance()
+    val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
     calendar.timeInMillis = currentPeriodStart
 
     repeat(7) {
@@ -82,7 +82,7 @@ fun HabitProgressTracker(
         ) {
             IconButton(
                 onClick = {
-                    val newStart = Calendar.getInstance().apply {
+                    val newStart = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
                         timeInMillis = currentPeriodStart
                         add(Calendar.DAY_OF_YEAR, -7)
                     }.timeInMillis
@@ -111,7 +111,7 @@ fun HabitProgressTracker(
             
             IconButton(
                 onClick = {
-                    val newStart = Calendar.getInstance().apply {
+                    val newStart = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
                         timeInMillis = currentPeriodStart
                         add(Calendar.DAY_OF_YEAR, 7)
                     }.timeInMillis
@@ -152,7 +152,7 @@ fun HabitProgressTracker(
 }
 
 private fun getStartOfDay(timestamp: Long): Long {
-    return Calendar.getInstance().apply {
+    return Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
         timeInMillis = timestamp
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)

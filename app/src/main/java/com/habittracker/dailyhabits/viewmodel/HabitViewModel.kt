@@ -100,43 +100,52 @@ class HabitViewModel(
     }
 
     fun calculateHabitStats(habits: List<Habit>, period: StatsPeriod = StatsPeriod.WEEK) {
-        val calendar = Calendar.getInstance()
-        val endDate = calendar.apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        viewModelScope.launch(Dispatchers.IO) {
+            val calendar = Calendar.getInstance()
+            val endDate = calendar.apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
 
-        val startDate = calendar.apply {
-            add(Calendar.DAY_OF_YEAR, -period.days)
-        }.timeInMillis
+            val startDate = if (period == StatsPeriod.ALL) {
+                habits.minOfOrNull { it.timestamp } ?: endDate
+            } else {
+                calendar.add(Calendar.DAY_OF_YEAR, -period.days)
+                calendar.timeInMillis
+            }
 
-        var totalCompleted = 0
-        var totalMissed = 0
-        var maxStreak = 0
-        var totalDays = 0
+            var totalCompleted = 0
+            var totalMissed = 0
+            var maxStreak = 0
+            var totalDaysInRange = 0
 
-        habits.forEach { habit ->
-            val stats = calculateSingleHabitStats(habit, startDate, endDate)
-            totalCompleted += stats.completedDays
-            totalMissed += stats.missedDays
-            maxStreak = maxOf(maxStreak, stats.longestStreak)
-            totalDays += stats.totalDays
+            habitStatsCache.clear()
+
+            habits.forEach { habit ->
+                val stats = calculateSingleHabitStats(habit, startDate, endDate)
+                habitStatsCache[habit.id] = stats
+
+                totalCompleted += stats.completedDays
+                totalMissed += stats.missedDays
+                maxStreak = maxOf(maxStreak, stats.longestStreak)
+                totalDaysInRange += stats.totalDays
+            }
+
+            val averageCompletion = if (totalDaysInRange > 0) {
+                (totalCompleted.toFloat() / totalDaysInRange * 100)
+            } else 0f
+
+            _habitStats.value = HabitStats(
+                averageCompletion = averageCompletion,
+                longestStreak = maxStreak,
+                missedDays = totalMissed,
+                totalHabits = habits.size,
+                completedDays = totalCompleted,
+                totalDays = totalDaysInRange
+            )
         }
-
-        val averageCompletion = if (totalDays > 0) {
-            (totalCompleted.toFloat() / totalDays * 100).roundToInt().toFloat()
-        } else 0f
-
-        _habitStats.value = HabitStats(
-            averageCompletion = averageCompletion,
-            longestStreak = maxStreak,
-            missedDays = totalMissed,
-            totalHabits = habits.size,
-            completedDays = totalCompleted,
-            totalDays = totalDays
-        )
     }
 
     fun getHabitStats(habit: Habit): HabitStats? {
@@ -154,34 +163,51 @@ class HabitViewModel(
         var maxStreak = 0
         var totalDays = 0
 
-        var currentDate = startDate
-        while (currentDate <= endDate) {
-            totalDays++
-            val status = habit.dailyStatus[currentDate]
-            if (status != null && status > 0f) {
-                completed++
-                currentStreak++
-                maxStreak = maxOf(maxStreak, currentStreak)
-            } else {
-                if (currentDate < System.currentTimeMillis()) {
-                    missed++
-                    currentStreak = 0
-                }
-            }
-            currentDate += 24 * 60 * 60 * 1000 // Добавляем один день
+        val calendar = Calendar.getInstance()
+
+        val habitCreationDate = calendar.apply {
+            timeInMillis = habit.timestamp
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val calculationStartDate = maxOf(startDate, habitCreationDate)
+
+        if (calculationStartDate > endDate) {
+            return HabitStats()
         }
 
-        val stats = HabitStats(
-            averageCompletion = if (totalDays > 0) {
-                (completed.toFloat() / totalDays * 100).roundToInt().toFloat()
-            } else 0f,
+        calendar.timeInMillis = calculationStartDate
+
+        val endCalendar = Calendar.getInstance().apply { timeInMillis = endDate }
+
+        val todayStart = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        while (calendar.timeInMillis <= endCalendar.timeInMillis) {
+            val dayStart = calendar.timeInMillis
+            totalDays++
+
+            val status = habit.dailyStatus[dayStart]
+            if (status != null && status >= (habit.targetValue ?: 1f)) {
+                completed++
+                currentStreak++
+            } else {
+                currentStreak = 0
+                if (dayStart < todayStart) {
+                    missed++
+                }
+            }
+            maxStreak = maxOf(maxStreak, currentStreak)
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+        }
+
+        return HabitStats(
+            averageCompletion = if (totalDays > 0) (completed.toFloat() / totalDays * 100) else 0f,
             longestStreak = maxStreak,
             missedDays = missed,
             completedDays = completed,
             totalDays = totalDays
         )
-
-        habitStatsCache[habit.id] = stats
-        return stats
     }
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.google.accompanist.flowlayout.FlowRow
 import com.habittracker.dailyhabits.model.Habit
 import com.habittracker.dailyhabits.model.HabitType
+import com.habittracker.dailyhabits.ui.components.HabitHeatmap
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,6 +40,7 @@ fun HabitItem(
     var showInputDialog by remember { mutableStateOf(false) }
     var inputValue by remember { mutableStateOf("") }
     val todayNormalized = remember { Habit.normalizeTimestamp(System.currentTimeMillis()) }
+    var expanded by remember { mutableStateOf(false) }
 
     if (showInputDialog) {
         AlertDialog(
@@ -75,13 +77,7 @@ fun HabitItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable {
-                if (habit.type == HabitType.MEASURABLE) {
-                    val todayStatus = habit.dailyStatus[todayNormalized]?.toString() ?: ""
-                    inputValue = todayStatus
-                    showInputDialog = true
-                }
-            },
+            .clickable { expanded = !expanded },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -117,11 +113,31 @@ fun HabitItem(
             } else {
                 val progress = habit.dailyStatus[todayNormalized] ?: 0f
                 val progressPercentage = (progress / (habit.targetValue ?: 1f)).coerceIn(0f, 1f)
-                Text("Прогресс: $progress / ${habit.targetValue} ${habit.unit}")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Прогресс: $progress / ${habit.targetValue} ${habit.unit}")
+                    Button(onClick = {
+                        val todayStatus = habit.dailyStatus[todayNormalized]?.toString() ?: ""
+                        inputValue = todayStatus
+                        showInputDialog = true
+                    }) {
+                        Text("Обновить")
+                    }
+                }
                 LinearProgressIndicator(
                     progress = progressPercentage,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            AnimatedVisibility(visible = expanded) {
+                Column {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HabitHeatmap(habit = habit)
+                }
             }
         }
     }
