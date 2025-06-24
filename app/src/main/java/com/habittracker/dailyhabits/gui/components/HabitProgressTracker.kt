@@ -47,22 +47,17 @@ fun HabitProgressTracker(
     android.util.Log.d("HabitProgressTracker", "Device time: ${Date(deviceTime)}")
     android.util.Log.d("HabitProgressTracker", "Current period start: ${Date(currentPeriodStart)}")
 
-    // Определяем конечную дату (deadline или текущая дата + 30 дней если deadline не установлен)
-    val endDate = habit.deadline ?: Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
-        timeInMillis = deviceTime
-        add(Calendar.DAY_OF_YEAR, 30)
-    }.timeInMillis
+    // Определяем начальную и конечную дату для прогресса
+    val startDate = habit.timestamp
+    val endDate = habit.deadline ?: getStartOfDay(System.currentTimeMillis())
 
-    // Получаем дни для текущего периода (7 дней)
+    // Получаем дни для отображения: только от даты создания до deadline/сегодня
     val days = mutableListOf<Long>()
     val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-    calendar.timeInMillis = currentPeriodStart
-
-    repeat(7) {
-        if (calendar.timeInMillis <= endDate) {
-            days.add(calendar.timeInMillis)
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
-        }
+    calendar.timeInMillis = getStartOfDay(startDate)
+    while (calendar.timeInMillis <= endDate) {
+        days.add(calendar.timeInMillis)
+        calendar.add(Calendar.DAY_OF_YEAR, 1)
     }
 
     android.util.Log.d("HabitProgressTracker", "Days to display: ${days.map { Date(it) }}")
@@ -95,9 +90,9 @@ fun HabitProgressTracker(
                 Icon(
                     Icons.Default.ChevronLeft,
                     contentDescription = "Предыдущий период",
-                    tint = if (currentPeriodStart > habit.timestamp) 
-                        MaterialTheme.colorScheme.primary 
-                    else 
+                    tint = if (currentPeriodStart > habit.timestamp)
+                        MaterialTheme.colorScheme.primary
+                    else
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 )
             }
@@ -144,7 +139,9 @@ fun HabitProgressTracker(
                     timestamp = normalizedTimestamp,
                     habit = habit,
                     isToday = normalizedTimestamp == getStartOfDay(deviceTime),
-                    onUpdateStatus = onUpdateStatus
+                    onUpdateStatus = { date, value ->
+                        onUpdateStatus(getStartOfDay(date), value)
+                    }
                 )
             }
         }

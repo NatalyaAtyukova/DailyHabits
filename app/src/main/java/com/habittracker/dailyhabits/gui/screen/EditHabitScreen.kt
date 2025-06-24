@@ -22,6 +22,8 @@ import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.navigation.NavController
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -68,6 +70,7 @@ fun EditHabitScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(innerPadding)
                     .padding(horizontal = 16.dp)
                     .padding(top = 16.dp),

@@ -108,7 +108,7 @@ fun HabitItem(
 
             if (habit.type == HabitType.SIMPLE) {
                 HabitProgressTracker(habit = habit) { date, value ->
-                    onUpdateStatus(habit, date, value)
+                    onUpdateStatus(habit, Habit.normalizeTimestamp(date), value)
                 }
             } else {
                 val progress = habit.dailyStatus[todayNormalized] ?: 0f

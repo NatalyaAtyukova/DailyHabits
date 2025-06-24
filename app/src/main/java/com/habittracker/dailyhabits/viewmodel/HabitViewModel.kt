@@ -35,6 +35,9 @@ class HabitViewModel(
 
     private val habitStatsCache = mutableMapOf<Int, HabitStats>()
 
+    private val _selectedStatsPeriod = MutableStateFlow(StatsPeriod.WEEK)
+    val selectedStatsPeriod: StateFlow<StatsPeriod> = _selectedStatsPeriod
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             habitDao.getAllHabits().collect { habits ->
@@ -96,6 +99,7 @@ class HabitViewModel(
                 updatedStatus[date] = value
             }
             habitDao.updateHabit(habit.copy(dailyStatus = updatedStatus))
+            calculateHabitStats(_allHabits.value, _selectedStatsPeriod.value)
         }
     }
 
@@ -165,40 +169,39 @@ class HabitViewModel(
 
         val calendar = Calendar.getInstance()
 
-        val habitCreationDate = calendar.apply {
-            timeInMillis = habit.timestamp
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-
-        val calculationStartDate = maxOf(startDate, habitCreationDate)
-
-        if (calculationStartDate > endDate) {
+        val habitCreationDate = Habit.normalizeTimestamp(habit.timestamp)
+        val calculationStartDate = maxOf(Habit.normalizeTimestamp(startDate), habitCreationDate)
+        val normalizedEndDate = Habit.normalizeTimestamp(endDate)
+        if (calculationStartDate > normalizedEndDate) {
             return HabitStats()
         }
 
         calendar.timeInMillis = calculationStartDate
-
-        val endCalendar = Calendar.getInstance().apply { timeInMillis = endDate }
-
-        val todayStart = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        val endCalendar = Calendar.getInstance().apply { timeInMillis = normalizedEndDate }
+        val todayStart = Habit.normalizeTimestamp(System.currentTimeMillis())
 
         while (calendar.timeInMillis <= endCalendar.timeInMillis) {
-            val dayStart = calendar.timeInMillis
-            totalDays++
-
-            val status = habit.dailyStatus[dayStart]
-            if (status != null && status >= (habit.targetValue ?: 1f)) {
-                completed++
-                currentStreak++
-            } else {
-                currentStreak = 0
-                if (dayStart < todayStart) {
-                    missed++
+            val dayStart = Habit.normalizeTimestamp(calendar.timeInMillis)
+            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+            val isRepeatDay = habit.repeatDays.isEmpty() || habit.repeatDays.contains(if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1)
+            if (isRepeatDay) {
+                if (dayStart > todayStart) {
+                    calendar.add(Calendar.DAY_OF_YEAR, 1)
+                    continue
                 }
+                totalDays++
+                val status = habit.dailyStatus[dayStart]
+                if (status != null && status >= (habit.targetValue ?: 1f)) {
+                    completed++
+                    currentStreak++
+                } else {
+                    currentStreak = 0
+                    if (dayStart < todayStart) {
+                        missed++
+                    }
+                }
+                maxStreak = maxOf(maxStreak, currentStreak)
             }
-            maxStreak = maxOf(maxStreak, currentStreak)
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
@@ -209,5 +212,10 @@ class HabitViewModel(
             completedDays = completed,
             totalDays = totalDays
         )
+    }
+
+    fun setStatsPeriod(period: StatsPeriod) {
+        _selectedStatsPeriod.value = period
+        calculateHabitStats(_allHabits.value, period)
     }
 }
