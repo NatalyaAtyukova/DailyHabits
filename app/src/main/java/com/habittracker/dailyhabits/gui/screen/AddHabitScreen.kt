@@ -61,8 +61,8 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
     var reminderTime by remember { mutableStateOf<String?>(null) }
     var repeatDays by remember { mutableStateOf(emptySet<Int>()) }
 
-    // --- Для диалога выбора стандартной привычки ---
-    var showStandardDialog by remember { mutableStateOf(false) }
+    // --- Для выделения выбранной стандартной привычки ---
+    var selectedStandard by remember { mutableStateOf<String?>(null) }
 
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     val context = LocalContext.current
@@ -84,11 +84,6 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                     }
                 },
-                actions = {
-                    IconButton(onClick = { showStandardDialog = true }) {
-                        Icon(Icons.Default.ListAlt, contentDescription = "Стандартные привычки")
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -97,35 +92,6 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
             )
         }
     ) { innerPadding ->
-        if (showStandardDialog) {
-            AlertDialog(
-                onDismissRequest = { showStandardDialog = false },
-                title = { Text("Выберите стандартную привычку") },
-                text = {
-                    Column {
-                        standardHabits.forEach { habit ->
-                            ListItem(
-                                headlineContent = { Text(habit.name) },
-                                supportingContent = { Text(habit.description) },
-                                modifier = Modifier.clickable {
-                                    name = habit.name
-                                    description = habit.description
-                                    habitType = habit.type
-                                    targetValue = habit.targetValue?.toString() ?: ""
-                                    unit = habit.unit ?: ""
-                                    showStandardDialog = false
-                                }
-                            )
-                        }
-                    }
-                },
-                confirmButton = {
-                    TextButton(onClick = { showStandardDialog = false }) {
-                        Text("Отмена")
-                    }
-                }
-            )
-        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -134,6 +100,37 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
         ) {
+            // --- БЛОК СТАНДАРТНЫХ ПРИВЫЧЕК ---
+            item {
+                Text("Популярные привычки", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    standardHabits.forEach { habit ->
+                        val isSelected = selectedStandard == habit.name
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                name = habit.name
+                                description = habit.description
+                                habitType = habit.type
+                                targetValue = habit.targetValue?.toString() ?: ""
+                                unit = habit.unit ?: ""
+                                selectedStandard = habit.name
+                            },
+                            label = { Text(habit.name) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             item {
                 OutlinedTextField(
                     value = name,
