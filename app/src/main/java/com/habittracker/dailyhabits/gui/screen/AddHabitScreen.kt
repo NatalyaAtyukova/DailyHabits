@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
@@ -24,6 +25,28 @@ import java.util.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 
+// --- СТАНДАРТНЫЕ ПРИВЫЧКИ ---
+data class StandardHabit(
+    val name: String,
+    val description: String = "",
+    val type: HabitType = HabitType.SIMPLE,
+    val targetValue: Float? = null,
+    val unit: String? = null
+)
+
+val standardHabits = listOf(
+    StandardHabit("Пить воду", "Выпивать 6-8 стаканов воды в день"),
+    StandardHabit("Зарядка", "Делать утреннюю разминку или упражнения"),
+    StandardHabit("Чтение", "Читать хотя бы 10 страниц в день"),
+    StandardHabit("Медитация", "Медитировать 5-10 минут"),
+    StandardHabit("Прогулка", "Гулять на свежем воздухе не менее 30 минут"),
+    StandardHabit("Дневник", "Записывать мысли или вести дневник"),
+    StandardHabit("Ранний подъем", "Вставать до 8:00"),
+    StandardHabit("Без сладкого", "Не есть сладкое в течение дня"),
+    StandardHabit("Фрукты/овощи", "Съесть 3 порции овощей или фруктов"),
+    StandardHabit("Спорт", "Заниматься спортом не менее 30 минут")
+)
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
@@ -37,6 +60,9 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
     var tagInput by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf<String?>(null) }
     var repeatDays by remember { mutableStateOf(emptySet<Int>()) }
+
+    // --- Для диалога выбора стандартной привычки ---
+    var showStandardDialog by remember { mutableStateOf(false) }
 
     val dateFormatter = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     val context = LocalContext.current
@@ -58,6 +84,11 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
                     }
                 },
+                actions = {
+                    IconButton(onClick = { showStandardDialog = true }) {
+                        Icon(Icons.Default.ListAlt, contentDescription = "Стандартные привычки")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -66,6 +97,35 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
             )
         }
     ) { innerPadding ->
+        if (showStandardDialog) {
+            AlertDialog(
+                onDismissRequest = { showStandardDialog = false },
+                title = { Text("Выберите стандартную привычку") },
+                text = {
+                    Column {
+                        standardHabits.forEach { habit ->
+                            ListItem(
+                                headlineContent = { Text(habit.name) },
+                                supportingContent = { Text(habit.description) },
+                                modifier = Modifier.clickable {
+                                    name = habit.name
+                                    description = habit.description
+                                    habitType = habit.type
+                                    targetValue = habit.targetValue?.toString() ?: ""
+                                    unit = habit.unit ?: ""
+                                    showStandardDialog = false
+                                }
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showStandardDialog = false }) {
+                        Text("Отмена")
+                    }
+                }
+            )
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
