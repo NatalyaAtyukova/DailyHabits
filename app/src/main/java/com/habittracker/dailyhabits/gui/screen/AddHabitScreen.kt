@@ -81,6 +81,10 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
     }
     val startOfDay = todayCalendar.timeInMillis
 
+    var nameError by remember { mutableStateOf(false) }
+    var targetValueError by remember { mutableStateOf(false) }
+    var unitError by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -141,14 +145,22 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
             item {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Название") },
+                    onValueChange = {
+                        name = it
+                        nameError = false
+                    },
+                    label = { Text("Название*") },
+                    isError = nameError,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        if (nameError) Text("Название обязательно для заполнения", color = MaterialTheme.colorScheme.error)
+                        else Text("Например: Пить воду, Зарядка, Чтение")
+                    },
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        focusedBorderColor = if (nameError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = if (nameError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline
                     )
                 )
             }
@@ -248,16 +260,32 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                     ) {
                         OutlinedTextField(
                             value = targetValue,
-                            onValueChange = { targetValue = it.filter { c -> c.isDigit() || c == '.' } },
-                            label = { Text("Цель") },
+                            onValueChange = {
+                                targetValue = it.filter { c -> c.isDigit() || c == '.' }
+                                targetValueError = false
+                            },
+                            label = { Text("Цель*") },
+                            isError = targetValueError,
                             modifier = Modifier.weight(1f),
-                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                            supportingText = {
+                                if (targetValueError) Text("Укажите числовое значение цели", color = MaterialTheme.colorScheme.error)
+                                else Text("Например: 2 (км), 10 (страниц), 30 (минут)")
+                            }
                         )
                         OutlinedTextField(
                             value = unit,
-                            onValueChange = { unit = it },
-                            label = { Text("Ед. изм.") },
-                            modifier = Modifier.weight(1f)
+                            onValueChange = {
+                                unit = it
+                                unitError = false
+                            },
+                            label = { Text("Ед. изм.*") },
+                            isError = unitError,
+                            modifier = Modifier.weight(1f),
+                            supportingText = {
+                                if (unitError) Text("Укажите единицу измерения", color = MaterialTheme.colorScheme.error)
+                                else Text("км, страниц, минут и т.д.")
+                            }
                         )
                     }
                 }
@@ -277,7 +305,8 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                             tagInput = ""
                         }
                     },
-                    label = { Text("Теги (через запятую)") },
+                    label = { Text("Теги") },
+                    supportingText = { Text("Можно добавить несколько тегов через запятую, например: здоровье, спорт") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -355,6 +384,22 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
             item {
                 Button(
                     onClick = {
+                        var valid = true
+                        if (name.isBlank()) {
+                            nameError = true
+                            valid = false
+                        }
+                        if (habitType == HabitType.MEASURABLE) {
+                            if (targetValue.isBlank() || targetValue.toFloatOrNull() == null) {
+                                targetValueError = true
+                                valid = false
+                            }
+                            if (unit.isBlank()) {
+                                unitError = true
+                                valid = false
+                            }
+                        }
+                        if (!valid) return@Button
                         viewModel.addHabit(
                             Habit(
                                 name = name,
