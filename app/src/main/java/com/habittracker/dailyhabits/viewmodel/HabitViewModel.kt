@@ -92,11 +92,12 @@ class HabitViewModel(
 
     fun updateHabitStatus(habit: Habit, date: Long, value: Float?) {
         viewModelScope.launch(Dispatchers.IO) {
+            val normalizedDate = Habit.normalizeTimestamp(date)
             val updatedStatus = habit.dailyStatus.toMutableMap()
             if (value == null) {
-                updatedStatus.remove(date)
+                updatedStatus.remove(normalizedDate)
             } else {
-                updatedStatus[date] = value
+                updatedStatus[normalizedDate] = value
             }
             habitDao.updateHabit(habit.copy(dailyStatus = updatedStatus))
             calculateHabitStats(_allHabits.value, _selectedStatsPeriod.value)
@@ -196,7 +197,7 @@ class HabitViewModel(
                     currentStreak++
                 } else {
                     currentStreak = 0
-                    if (dayStart < todayStart) {
+                    if (dayStart <= todayStart) {
                         missed++
                     }
                 }
