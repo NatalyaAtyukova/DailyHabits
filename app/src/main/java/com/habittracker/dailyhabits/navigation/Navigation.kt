@@ -33,12 +33,14 @@ fun Navigation(database: HabitDatabase) {
                 onEditHabit = { habitId ->
                     navController.navigate("${Screen.EditHabit.route}/$habitId")
                 },
-                onOpenStats = { navController.navigate(Screen.HabitStats.route) }
+                onOpenStats = { navController.navigate(Screen.HabitStats.route) },
+                navController = navController
             )
         }
         composable(Screen.AddHabit.route) {
             AddHabitScreen(
                 viewModel = habitViewModel,
+                navController = navController,
                 onBack = { navController.popBackStack() }
             )
         }

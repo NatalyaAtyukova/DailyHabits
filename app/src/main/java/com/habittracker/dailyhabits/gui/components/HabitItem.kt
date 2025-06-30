@@ -96,6 +96,14 @@ fun HabitItem(
                     }
                 }
             }
+            if (habit.description.isNotBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = habit.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Spacer(modifier = Modifier.height(8.dp))
             if (habit.tags.isNotEmpty()) {
                 FlowRow(mainAxisSpacing = 4.dp, crossAxisSpacing = 4.dp) {

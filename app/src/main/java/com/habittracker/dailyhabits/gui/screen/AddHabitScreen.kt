@@ -24,6 +24,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.NavController
 
 // --- СТАНДАРТНЫЕ ПРИВЫЧКИ ---
 data class StandardHabit(
@@ -50,7 +53,7 @@ val standardHabits = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
+fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBack: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var deadline by remember { mutableStateOf<Long?>(null) }
@@ -61,6 +64,8 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
     var tagInput by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf<String?>(null) }
     var repeatDays by remember { mutableStateOf(emptySet<Int>()) }
+    var showSnackbar by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // --- Для выделения выбранной стандартной привычки ---
     var selectedStandard by remember { mutableStateOf<String?>(null) }
@@ -91,7 +96,8 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                     navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -364,6 +370,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                                 dailyStatus = emptyMap()
                             )
                         )
+                        navController.previousBackStackEntry?.savedStateHandle?.set("habit_created", true)
                         onBack()
                     },
                     enabled = name.isNotBlank(),
@@ -376,6 +383,18 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                 ) {
                     Text("Создать привычку", style = MaterialTheme.typography.titleMedium)
                 }
+            }
+        }
+        // --- SNACKBAR ---
+        if (showSnackbar) {
+            LaunchedEffect(showSnackbar) {
+                snackbarHostState.showSnackbar(
+                    message = "Привычка добавлена!",
+                    withDismissAction = true
+                )
+                kotlinx.coroutines.delay(1200)
+                showSnackbar = false
+                onBack()
             }
         }
     }

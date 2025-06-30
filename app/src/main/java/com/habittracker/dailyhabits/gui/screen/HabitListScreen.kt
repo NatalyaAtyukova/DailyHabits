@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.gui.components.HabitItem
 import com.habittracker.dailyhabits.model.Habit
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,7 +26,8 @@ fun HabitListScreen(
     viewModel: HabitViewModel,
     onAddHabit: () -> Unit,
     onEditHabit: (habitId: Int) -> Unit,
-    onOpenStats: () -> Unit
+    onOpenStats: () -> Unit,
+    navController: NavController
 ) {
     val habits by viewModel.filteredHabits.collectAsState()
     val tags by viewModel.tags.collectAsState()
