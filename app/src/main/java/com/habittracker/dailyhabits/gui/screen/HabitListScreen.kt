@@ -30,8 +30,6 @@ fun HabitListScreen(
     navController: NavController
 ) {
     val habits by viewModel.filteredHabits.collectAsState()
-    val tags by viewModel.tags.collectAsState()
-    val selectedTag by viewModel.selectedTag.collectAsState()
 
     Scaffold(
         floatingActionButton = {
@@ -72,29 +70,6 @@ fun HabitListScreen(
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-
-            // Панель фильтров по тегам
-            if (tags.isNotEmpty()) {
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    item {
-                        FilterChip(
-                            selected = selectedTag == null,
-                            onClick = { viewModel.selectTag(null) },
-                            label = { Text("Все") }
-                        )
-                    }
-                    items(tags) { tag ->
-                        FilterChip(
-                            selected = selectedTag == tag,
-                            onClick = { viewModel.selectTag(tag) },
-                            label = { Text(tag) }
-                        )
-                    }
-                }
-            }
 
             if (habits.isEmpty()) {
                 Box(

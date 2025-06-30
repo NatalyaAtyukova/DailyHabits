@@ -60,9 +60,10 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
     var habitType by remember { mutableStateOf(HabitType.SIMPLE) }
     var targetValue by remember { mutableStateOf("") }
     var unit by remember { mutableStateOf("") }
-    var tags by remember { mutableStateOf(listOf<String>()) }
-    var tagInput by remember { mutableStateOf("") }
-    var reminderTime by remember { mutableStateOf<String?>(null) }
+    var reminders by remember { mutableStateOf(listOf<String>()) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var timePickerHour by remember { mutableStateOf(8) }
+    var timePickerMinute by remember { mutableStateOf(0) }
     var repeatDays by remember { mutableStateOf(emptySet<Int>()) }
     var showSnackbar by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -292,77 +293,48 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
             }
 
             item {
-                // Поле для тегов
-                OutlinedTextField(
-                    value = tagInput,
-                    onValueChange = {
-                        tagInput = it
-                        if (it.contains(",")) {
-                            val newTags = it.split(",")
-                                .map { tag -> tag.trim() }
-                                .filter { tag -> tag.isNotBlank() }
-                            tags = (tags + newTags).distinct()
-                            tagInput = ""
-                        }
-                    },
-                    label = { Text("Теги") },
-                    supportingText = { Text("Можно добавить несколько тегов через запятую, например: здоровье, спорт") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            item {
-                // Отображение добавленных тегов
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    tags.forEach { tag ->
-                        InputChip(
-                            selected = false,
-                            onClick = { },
-                            label = { Text(tag) },
-                            trailingIcon = {
-                                Icon(
-                                    Icons.Default.Clear,
-                                    contentDescription = "Удалить тег",
-                                    modifier = Modifier.clickable {
-                                        tags = tags - tag
-                                    }
-                                )
-                            }
-                        )
-                    }
-                }
-            }
-
-            item {
                 // Настройка повторов и напоминаний
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         Text("Напоминания и повторы", style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Выбор времени
-                        val timePickerDialog = TimePickerDialog(
-                            context,
-                            { _, hour, minute ->
-                                reminderTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
-                            }, 12, 0, true
-                        )
-
-                        Button(onClick = { timePickerDialog.show() }) {
-                            Text(reminderTime ?: "Выбрать время напоминания")
+                        // --- Список напоминаний ---
+                        reminders.forEachIndexed { idx, time ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(time, style = MaterialTheme.typography.bodyLarge)
+                                IconButton(onClick = { reminders = reminders.toMutableList().also { it.removeAt(idx) } }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Удалить напоминание")
+                                }
+                            }
+                        }
+                        Button(onClick = { showTimePicker = true }) {
+                            Text("Добавить напоминание")
+                        }
+                        if (showTimePicker) {
+                            val context = LocalContext.current
+                            TimePickerDialog(
+                                context,
+                                { _, hour, minute ->
+                                    val timeStr = String.format("%02d:%02d", hour, minute)
+                                    if (timeStr !in reminders) reminders = reminders + timeStr
+                                    showTimePicker = false
+                                },
+                                timePickerHour, timePickerMinute, true
+                            ).show()
                         }
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Выбор дней недели
-                        val weekDays = listOf("Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс")
+                        // --- Новый выбор дней недели ---
+                        val weekDays = listOf(
+                            "Пн" to "🌑", "Вт" to "🌒", "Ср" to "🌓", "Чт" to "🌔", "Пт" to "🌕", "Сб" to "🌖", "Вс" to "🌞"
+                        )
                         FlowRow(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            weekDays.forEachIndexed { index, day ->
+                            weekDays.forEachIndexed { index, (day, emoji) ->
                                 val dayOfWeek = index + 1
                                 FilterChip(
                                     selected = repeatDays.contains(dayOfWeek),
@@ -373,7 +345,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                                             repeatDays + dayOfWeek
                                         }
                                     },
-                                    label = { Text(day) }
+                                    label = { Text("$emoji $day") }
                                 )
                             }
                         }
@@ -409,8 +381,8 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                                 type = habitType,
                                 targetValue = targetValue.toFloatOrNull(),
                                 unit = unit.takeIf { it.isNotBlank() },
-                                tags = tags,
-                                reminderTime = reminderTime,
+                                tags = emptyList(),
+                                reminderTime = reminders.firstOrNull(), // для обратной совместимости
                                 repeatDays = repeatDays.toList(),
                                 dailyStatus = emptyMap()
                             )

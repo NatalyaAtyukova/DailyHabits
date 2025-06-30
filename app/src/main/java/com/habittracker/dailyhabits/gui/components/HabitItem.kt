@@ -105,14 +105,6 @@ fun HabitItem(
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            if (habit.tags.isNotEmpty()) {
-                FlowRow(mainAxisSpacing = 4.dp, crossAxisSpacing = 4.dp) {
-                    habit.tags.forEach { tag ->
-                        AssistChip(onClick = { /* no-op */ }, label = { Text(tag) })
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
 
             if (habit.type == HabitType.SIMPLE) {
                 HabitProgressTracker(habit = habit) { date, value ->
