@@ -31,20 +31,21 @@ data class StandardHabit(
     val description: String = "",
     val type: HabitType = HabitType.SIMPLE,
     val targetValue: Float? = null,
-    val unit: String? = null
+    val unit: String? = null,
+    val emoji: String
 )
 
 val standardHabits = listOf(
-    StandardHabit("Пить воду", "Выпивать 6-8 стаканов воды в день"),
-    StandardHabit("Зарядка", "Делать утреннюю разминку или упражнения"),
-    StandardHabit("Чтение", "Читать хотя бы 10 страниц в день"),
-    StandardHabit("Медитация", "Медитировать 5-10 минут"),
-    StandardHabit("Прогулка", "Гулять на свежем воздухе не менее 30 минут"),
-    StandardHabit("Дневник", "Записывать мысли или вести дневник"),
-    StandardHabit("Ранний подъем", "Вставать до 8:00"),
-    StandardHabit("Без сладкого", "Не есть сладкое в течение дня"),
-    StandardHabit("Фрукты/овощи", "Съесть 3 порции овощей или фруктов"),
-    StandardHabit("Спорт", "Заниматься спортом не менее 30 минут")
+    StandardHabit("Пить воду", "Выпивать 6-8 стаканов воды в день", HabitType.SIMPLE, null, null, "💧"),
+    StandardHabit("Зарядка", "Делать утреннюю разминку или упражнения", HabitType.SIMPLE, null, null, "🏃"),
+    StandardHabit("Чтение", "Читать хотя бы 10 страниц в день", HabitType.SIMPLE, null, null, "📖"),
+    StandardHabit("Медитация", "Медитировать 5-10 минут", HabitType.SIMPLE, null, null, "🧘"),
+    StandardHabit("Прогулка", "Гулять на свежем воздухе не менее 30 минут", HabitType.SIMPLE, null, null, "🚶"),
+    StandardHabit("Дневник", "Записывать мысли или вести дневник", HabitType.SIMPLE, null, null, "📝"),
+    StandardHabit("Ранний подъем", "Вставать до 8:00", HabitType.SIMPLE, null, null, "🌞"),
+    StandardHabit("Без сладкого", "Не есть сладкое в течение дня", HabitType.SIMPLE, null, null, "🍫"),
+    StandardHabit("Фрукты/овощи", "Съесть 3 порции овощей или фруктов", HabitType.SIMPLE, null, null, "🥦"),
+    StandardHabit("Спорт", "Заниматься спортом не менее 30 минут", HabitType.SIMPLE, null, null, "🏋")
 )
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -121,7 +122,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, onBack: () -> Unit) {
                                 unit = habit.unit ?: ""
                                 selectedStandard = habit.name
                             },
-                            label = { Text(habit.name) },
+                            label = { Text("${habit.emoji} ${habit.name}") },
                             colors = FilterChipDefaults.filterChipColors(
                                 containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                             )
