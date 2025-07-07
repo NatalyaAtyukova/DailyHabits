@@ -24,15 +24,19 @@
             android:value="R-M-14492374-1" />
 
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashActivity"
             android:exported="true"
-            android:label="@string/daily_habits"
             android:theme="@style/Theme.DailyHabits">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/daily_habits"
+            android:theme="@style/Theme.DailyHabits" />
     </application>
 
 </manifest>

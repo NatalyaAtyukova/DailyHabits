@@ -18,7 +18,7 @@ import com.yandex.mobile.ads.common.ImpressionData
 @Composable
 fun AdBanner(
     modifier: Modifier = Modifier,
-    adUnitId: String = "R-M-14492374-1"
+    adUnitId: String = "R-M-14492374-2"
 ) {
     val context = LocalContext.current
     

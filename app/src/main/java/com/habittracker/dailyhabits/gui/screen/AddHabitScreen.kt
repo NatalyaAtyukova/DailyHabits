@@ -27,6 +27,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
+import com.habittracker.dailyhabits.ui.components.AdBanner
+import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 
 // --- СТАНДАРТНЫЕ ПРИВЫЧКИ ---
 data class StandardHabit(
@@ -53,7 +55,7 @@ val standardHabits = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBack: () -> Unit) {
+fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBack: () -> Unit, interstitialAdManager: InterstitialAdManager) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var deadline by remember { mutableStateOf<Long?>(null) }
@@ -102,7 +104,10 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                 )
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = {
+            AdBanner(modifier = Modifier.fillMaxWidth())
+        }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -382,13 +387,15 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                                 targetValue = targetValue.toFloatOrNull(),
                                 unit = unit.takeIf { it.isNotBlank() },
                                 tags = emptyList(),
-                                reminderTime = reminders.firstOrNull(), // для обратной совместимости
+                                reminderTime = reminders.firstOrNull(),
                                 repeatDays = repeatDays.toList(),
                                 dailyStatus = emptyMap()
                             )
                         )
                         navController.previousBackStackEntry?.savedStateHandle?.set("habit_created", true)
-                        onBack()
+                        interstitialAdManager.showAd((navController.context as? android.app.Activity) ?: return@Button) {
+                            onBack()
+                        }
                     },
                     enabled = name.isNotBlank(),
                     modifier = Modifier

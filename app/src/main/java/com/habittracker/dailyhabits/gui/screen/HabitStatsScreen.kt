@@ -30,12 +30,16 @@ import com.habittracker.dailyhabits.model.HabitStats
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.habittracker.dailyhabits.ui.components.AdBanner
+import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitStatsScreen(
     habitViewModel: HabitViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    interstitialAdManager: InterstitialAdManager
 ) {
     val habits by habitViewModel.allHabits.collectAsState()
     var selectedPeriod by remember { mutableStateOf(StatsPeriod.WEEK) }
@@ -45,6 +49,8 @@ fun HabitStatsScreen(
     }
 
     val habitStats by habitViewModel.habitStats.collectAsState()
+
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -57,7 +63,11 @@ fun HabitStatsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        interstitialAdManager.showAd((context as? android.app.Activity) ?: return@IconButton) {
+                            onBack()
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Назад",
@@ -72,6 +82,9 @@ fun HabitStatsScreen(
                     PeriodSelector(selectedPeriod) { selectedPeriod = it }
                 }
             )
+        },
+        bottomBar = {
+            AdBanner(modifier = Modifier.fillMaxWidth())
         }
     ) { paddingValues ->
         if (habits.isEmpty()) {

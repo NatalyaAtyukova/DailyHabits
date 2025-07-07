@@ -16,9 +16,10 @@ import com.habittracker.dailyhabits.gui.screen.HabitStatsScreen
 import com.habittracker.dailyhabits.services.ReminderManager
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.viewmodel.HabitViewModelFactory
+import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 
 @Composable
-fun Navigation(database: HabitDatabase) {
+fun Navigation(database: HabitDatabase, interstitialAdManager: InterstitialAdManager) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val habitViewModel: HabitViewModel = viewModel(
@@ -34,14 +35,16 @@ fun Navigation(database: HabitDatabase) {
                     navController.navigate("${Screen.EditHabit.route}/$habitId")
                 },
                 onOpenStats = { navController.navigate(Screen.HabitStats.route) },
-                navController = navController
+                navController = navController,
+                interstitialAdManager = interstitialAdManager
             )
         }
         composable(Screen.AddHabit.route) {
             AddHabitScreen(
                 viewModel = habitViewModel,
                 navController = navController,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                interstitialAdManager = interstitialAdManager
             )
         }
         composable(
@@ -53,14 +56,16 @@ fun Navigation(database: HabitDatabase) {
                 EditHabitScreen(
                     habitViewModel = habitViewModel,
                     navController = navController,
-                    habitId = habitId
+                    habitId = habitId,
+                    interstitialAdManager = interstitialAdManager
                 )
             }
         }
         composable(Screen.HabitStats.route) {
             HabitStatsScreen(
                 habitViewModel = habitViewModel,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                interstitialAdManager = interstitialAdManager
             )
         }
     }

@@ -19,6 +19,8 @@ import com.habittracker.dailyhabits.viewmodel.HabitViewModel
 import com.habittracker.dailyhabits.gui.components.HabitItem
 import com.habittracker.dailyhabits.model.Habit
 import androidx.navigation.NavController
+import com.habittracker.dailyhabits.ui.components.AdBanner
+import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +29,8 @@ fun HabitListScreen(
     onAddHabit: () -> Unit,
     onEditHabit: (habitId: Int) -> Unit,
     onOpenStats: () -> Unit,
-    navController: NavController
+    navController: NavController,
+    interstitialAdManager: InterstitialAdManager
 ) {
     val habits by viewModel.filteredHabits.collectAsState()
 
@@ -35,7 +38,11 @@ fun HabitListScreen(
         floatingActionButton = {
             Column {
                 FloatingActionButton(
-                    onClick = onOpenStats,
+                    onClick = {
+                        interstitialAdManager.showAd((navController.context as? android.app.Activity) ?: return@FloatingActionButton) {
+                            onOpenStats()
+                        }
+                    },
                     containerColor = MaterialTheme.colorScheme.secondary
                 ) {
                     Icon(
@@ -46,7 +53,11 @@ fun HabitListScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 FloatingActionButton(
-                    onClick = onAddHabit,
+                    onClick = {
+                        interstitialAdManager.showAd((navController.context as? android.app.Activity) ?: return@FloatingActionButton) {
+                            onAddHabit()
+                        }
+                    },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
                     Icon(
@@ -56,6 +67,9 @@ fun HabitListScreen(
                     )
                 }
             }
+        },
+        bottomBar = {
+            AdBanner(modifier = Modifier.fillMaxWidth())
         }
     ) { innerPadding ->
         Column(
@@ -116,7 +130,11 @@ fun HabitListScreen(
                             habit = habit,
                             onUpdateStatus = viewModel::updateHabitStatus,
                             onDeleteHabit = viewModel::deleteHabit,
-                            onEditHabit = onEditHabit
+                            onEditHabit = {
+                                interstitialAdManager.showAd((navController.context as? android.app.Activity) ?: return@HabitItem) {
+                                    onEditHabit(it)
+                                }
+                            }
                         )
                     }
                 }

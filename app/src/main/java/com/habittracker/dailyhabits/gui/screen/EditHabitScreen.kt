@@ -24,13 +24,16 @@ import java.util.*
 import androidx.navigation.NavController
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import com.habittracker.dailyhabits.ui.components.AdBanner
+import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun EditHabitScreen(
     habitViewModel: HabitViewModel,
     navController: NavController,
-    habitId: Int
+    habitId: Int,
+    interstitialAdManager: InterstitialAdManager
 ) {
     val habitState = habitViewModel.getHabitById(habitId).collectAsState(initial = null)
     val habit = habitState.value
@@ -49,6 +52,7 @@ fun EditHabitScreen(
         var tagInput by remember { mutableStateOf("") }
         var reminderTime by remember { mutableStateOf(habit.reminderTime) }
         var repeatDays by remember { mutableStateOf(habit.repeatDays.toSet()) }
+        val snackbarHostState = remember { SnackbarHostState() }
 
         Scaffold(
             topBar = {
@@ -65,6 +69,10 @@ fun EditHabitScreen(
                         navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 )
+            },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            bottomBar = {
+                AdBanner(modifier = Modifier.fillMaxWidth())
             }
         ) { innerPadding ->
             Column(
@@ -312,7 +320,9 @@ fun EditHabitScreen(
                                     repeatDays = repeatDays.toList()
                                 )
                             )
-                            navController.popBackStack()
+                            interstitialAdManager.showAd((navController.context as? android.app.Activity) ?: return@Button) {
+                                navController.popBackStack()
+                            }
                         },
                         enabled = name.isNotBlank(),
                         modifier = Modifier.weight(1f),
