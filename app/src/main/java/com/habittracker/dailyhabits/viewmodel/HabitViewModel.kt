@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import com.habittracker.dailyhabits.model.HabitStats
-import com.habittracker.dailyhabits.gui.screen.StatsPeriod
+import com.habittracker.dailyhabits.model.StatsPeriod
 import java.util.*
 import kotlin.math.roundToInt
 

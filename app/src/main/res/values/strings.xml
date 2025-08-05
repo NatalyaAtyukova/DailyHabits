@@ -65,11 +65,11 @@
     <!-- Habit Item -->
     <string name="edit">Редактировать</string>
     <string name="delete">Удалить</string>
-    <string name="update_progress">Обновить прогресс для \"%s\"</string>
-    <string name="today_result">Сегодняшний результат (%s)</string>
-    <string name="progress">Прогресс: %s / %s %s</string>
+    <string name="update_progress" formatted="false">Обновить прогресс для \"%s\"</string>
+    <string name="today_result" formatted="false">Сегодняшний результат (%s)</string>
+    <string name="progress" formatted="false">Прогресс: %s / %s %s</string>
     <string name="update">Обновить</string>
-    <string name="today">Сегодня: %s / %s %s</string>
+    <string name="today" formatted="false">Сегодня: %s / %s %s</string>
     <string name="update_result">Обновить результат</string>
     
     <!-- Statistics Screen -->

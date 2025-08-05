@@ -43,8 +43,7 @@ fun Navigation(database: HabitDatabase, interstitialAdManager: InterstitialAdMan
             AddHabitScreen(
                 viewModel = habitViewModel,
                 navController = navController,
-                onBack = { navController.popBackStack() },
-                interstitialAdManager = interstitialAdManager
+                onBack = { navController.popBackStack() }
             )
         }
         composable(

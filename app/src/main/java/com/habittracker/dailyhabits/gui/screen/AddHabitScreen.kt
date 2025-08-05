@@ -30,6 +30,7 @@ import androidx.navigation.NavController
 import com.habittracker.dailyhabits.ui.components.AdBanner
 import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 import androidx.compose.ui.res.stringResource
+import com.habittracker.dailyhabits.R
 
 // --- СТАНДАРТНЫЕ ПРИВЫЧКИ ---
 data class StandardHabit(
@@ -41,84 +42,83 @@ data class StandardHabit(
     val emoji: String
 )
 
-@Composable
 fun getStandardHabits(): List<StandardHabit> {
     return listOf(
         StandardHabit(
-            name = stringResource(R.string.drink_water),
-            description = stringResource(R.string.drink_water_desc),
+            name = "Пить воду",
+            description = "Выпивать 6-8 стаканов воды в день",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "💧"
         ),
         StandardHabit(
-            name = stringResource(R.string.exercise),
-            description = stringResource(R.string.exercise_desc),
+            name = "Зарядка",
+            description = "Делать утреннюю разминку или упражнения",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "🏃"
         ),
         StandardHabit(
-            name = stringResource(R.string.reading),
-            description = stringResource(R.string.reading_desc),
+            name = "Чтение",
+            description = "Читать хотя бы 10 страниц в день",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "📖"
         ),
         StandardHabit(
-            name = stringResource(R.string.meditation),
-            description = stringResource(R.string.meditation_desc),
+            name = "Медитация",
+            description = "Медитировать 5-10 минут",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "🧘"
         ),
         StandardHabit(
-            name = stringResource(R.string.walking),
-            description = stringResource(R.string.walking_desc),
+            name = "Прогулка",
+            description = "Гулять на свежем воздухе не менее 30 минут",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "🚶"
         ),
         StandardHabit(
-            name = stringResource(R.string.journaling),
-            description = stringResource(R.string.journaling_desc),
+            name = "Дневник",
+            description = "Записывать мысли или вести дневник",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "📝"
         ),
         StandardHabit(
-            name = stringResource(R.string.early_rise),
-            description = stringResource(R.string.early_rise_desc),
+            name = "Ранний подъем",
+            description = "Вставать до 8:00",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "🌞"
         ),
         StandardHabit(
-            name = stringResource(R.string.no_sweets),
-            description = stringResource(R.string.no_sweets_desc),
+            name = "Без сладкого",
+            description = "Не есть сладкое в течение дня",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "🍫"
         ),
         StandardHabit(
-            name = stringResource(R.string.fruits_vegetables),
-            description = stringResource(R.string.fruits_vegetables_desc),
+            name = "Фрукты/овощи",
+            description = "Съесть 3 порции овощей или фруктов",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
             emoji = "🥦"
         ),
         StandardHabit(
-            name = stringResource(R.string.sport),
-            description = stringResource(R.string.sport_desc),
+            name = "Спорт",
+            description = "Заниматься спортом не менее 30 минут",
             type = HabitType.SIMPLE,
             targetValue = null,
             unit = null,
@@ -129,7 +129,7 @@ fun getStandardHabits(): List<StandardHabit> {
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBack: () -> Unit, interstitialAdManager: InterstitialAdManager) {
+fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBack: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var deadline by remember { mutableStateOf<Long?>(null) }
@@ -161,6 +161,9 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
     var nameError by remember { mutableStateOf(false) }
     var targetValueError by remember { mutableStateOf(false) }
     var unitError by remember { mutableStateOf(false) }
+
+    // Вызываем getStandardHabits() внутри @Composable функции
+    val standardHabits = getStandardHabits()
 
     Scaffold(
         topBar = {
@@ -200,7 +203,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    getStandardHabits().forEach { habit ->
+                    standardHabits.forEach { habit ->
                         val isSelected = selectedStandard == habit.name
                         FilterChip(
                             selected = isSelected,
@@ -467,9 +470,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                             )
                         )
                         navController.previousBackStackEntry?.savedStateHandle?.set("habit_created", true)
-                        interstitialAdManager.showAd((navController.context as? android.app.Activity) ?: return@Button) {
-                            onBack()
-                        }
+                        onBack()
                     },
                     enabled = name.isNotBlank(),
                     modifier = Modifier
@@ -479,7 +480,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-                    Text(stringResource(R.string.create_habit), style = MaterialTheme.typography.titleMedium)
+                    Text("Создать привычку", style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -487,7 +488,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
         if (showSnackbar) {
             LaunchedEffect(showSnackbar) {
                 snackbarHostState.showSnackbar(
-                    message = stringResource(R.string.habit_added),
+                    message = "Привычка добавлена!",
                     withDismissAction = true
                 )
                 kotlinx.coroutines.delay(1200)

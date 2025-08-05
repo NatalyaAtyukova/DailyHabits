@@ -29,6 +29,7 @@ import com.habittracker.dailyhabits.ui.components.HabitHeatmap
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.compose.ui.res.stringResource
+import com.habittracker.dailyhabits.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +52,7 @@ fun HabitItem(
                 OutlinedTextField(
                     value = inputValue,
                     onValueChange = { inputValue = it.filter { c -> c.isDigit() || c == '.' } },
-                    label = { Text(stringResource(R.string.today_result, habit.unit)) },
+                    label = { Text(stringResource(R.string.today_result, habit.unit ?: "")) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             },
@@ -119,7 +120,7 @@ fun HabitItem(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.progress, progress.toString(), habit.targetValue.toString(), habit.unit))
+                    Text(stringResource(R.string.progress, progress.toString(), habit.targetValue.toString(), habit.unit ?: ""))
                     Button(onClick = {
                         val todayStatus = habit.dailyStatus[todayNormalized]?.toString() ?: ""
                         inputValue = todayStatus
@@ -173,7 +174,7 @@ fun MeasurableHabitTracker(habit: Habit, onUpdateClick: () -> Unit) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
-            stringResource(R.string.today, "%.1f".format(todayValue), "%.1f".format(targetValue), habit.unit),
+            stringResource(R.string.today, "%.1f".format(todayValue), "%.1f".format(targetValue), habit.unit ?: ""),
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(8.dp))

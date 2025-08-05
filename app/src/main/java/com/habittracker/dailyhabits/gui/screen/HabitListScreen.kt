@@ -22,6 +22,7 @@ import androidx.navigation.NavController
 import com.habittracker.dailyhabits.ui.components.AdBanner
 import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 import androidx.compose.ui.res.stringResource
+import com.habittracker.dailyhabits.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

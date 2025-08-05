@@ -21,19 +21,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.res.stringResource
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.PercentFormatter
 import com.habittracker.dailyhabits.model.Habit
 import com.habittracker.dailyhabits.model.HabitStats
+import com.habittracker.dailyhabits.model.StatsPeriod
 import com.habittracker.dailyhabits.viewmodel.HabitViewModel
-import java.text.SimpleDateFormat
-import java.util.*
 import com.habittracker.dailyhabits.ui.components.AdBanner
 import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import com.habittracker.dailyhabits.R
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -155,12 +157,6 @@ fun HabitStatsScreen(
             }
         }
     }
-}
-
-enum class StatsPeriod(val title: String, val days: Int) {
-    WEEK("Неделя", 7),
-    MONTH("Месяц", 30),
-    ALL("Все время", -1) // -1 для обозначения всего периода
 }
 
 @Composable
