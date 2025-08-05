@@ -41,18 +41,91 @@ data class StandardHabit(
     val emoji: String
 )
 
-val standardHabits = listOf(
-    StandardHabit("Пить воду", "Выпивать 6-8 стаканов воды в день", HabitType.SIMPLE, null, null, "💧"),
-    StandardHabit("Зарядка", "Делать утреннюю разминку или упражнения", HabitType.SIMPLE, null, null, "🏃"),
-    StandardHabit("Чтение", "Читать хотя бы 10 страниц в день", HabitType.SIMPLE, null, null, "📖"),
-    StandardHabit("Медитация", "Медитировать 5-10 минут", HabitType.SIMPLE, null, null, "🧘"),
-    StandardHabit("Прогулка", "Гулять на свежем воздухе не менее 30 минут", HabitType.SIMPLE, null, null, "🚶"),
-    StandardHabit("Дневник", "Записывать мысли или вести дневник", HabitType.SIMPLE, null, null, "📝"),
-    StandardHabit("Ранний подъем", "Вставать до 8:00", HabitType.SIMPLE, null, null, "🌞"),
-    StandardHabit("Без сладкого", "Не есть сладкое в течение дня", HabitType.SIMPLE, null, null, "🍫"),
-    StandardHabit("Фрукты/овощи", "Съесть 3 порции овощей или фруктов", HabitType.SIMPLE, null, null, "🥦"),
-    StandardHabit("Спорт", "Заниматься спортом не менее 30 минут", HabitType.SIMPLE, null, null, "🏋")
-)
+@Composable
+fun getStandardHabits(): List<StandardHabit> {
+    return listOf(
+        StandardHabit(
+            name = stringResource(R.string.drink_water),
+            description = stringResource(R.string.drink_water_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "💧"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.exercise),
+            description = stringResource(R.string.exercise_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "🏃"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.reading),
+            description = stringResource(R.string.reading_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "📖"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.meditation),
+            description = stringResource(R.string.meditation_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "🧘"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.walking),
+            description = stringResource(R.string.walking_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "🚶"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.journaling),
+            description = stringResource(R.string.journaling_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "📝"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.early_rise),
+            description = stringResource(R.string.early_rise_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "🌞"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.no_sweets),
+            description = stringResource(R.string.no_sweets_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "🍫"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.fruits_vegetables),
+            description = stringResource(R.string.fruits_vegetables_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "🥦"
+        ),
+        StandardHabit(
+            name = stringResource(R.string.sport),
+            description = stringResource(R.string.sport_desc),
+            type = HabitType.SIMPLE,
+            targetValue = null,
+            unit = null,
+            emoji = "🏋"
+        )
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -127,7 +200,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    standardHabits.forEach { habit ->
+                    getStandardHabits().forEach { habit ->
                         val isSelected = selectedStandard == habit.name
                         FilterChip(
                             selected = isSelected,
@@ -139,19 +212,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                                 unit = habit.unit ?: ""
                                 selectedStandard = habit.name
                             },
-                            label = { Text("${habit.emoji} ${stringResource(when(habit.name) {
-                                "Пить воду" -> R.string.drink_water
-                                "Зарядка" -> R.string.exercise
-                                "Чтение" -> R.string.reading
-                                "Медитация" -> R.string.meditation
-                                "Прогулка" -> R.string.walking
-                                "Дневник" -> R.string.journaling
-                                "Ранний подъем" -> R.string.early_rise
-                                "Без сладкого" -> R.string.no_sweets
-                                "Фрукты/овощи" -> R.string.fruits_vegetables
-                                "Спорт" -> R.string.sport
-                                else -> R.string.drink_water
-                            })}") },
+                            label = { Text("${habit.emoji} ${habit.name}") },
                             colors = FilterChipDefaults.filterChipColors(
                                 containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                             )

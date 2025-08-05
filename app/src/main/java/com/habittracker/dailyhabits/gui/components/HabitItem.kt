@@ -28,6 +28,7 @@ import com.habittracker.dailyhabits.model.HabitType
 import com.habittracker.dailyhabits.ui.components.HabitHeatmap
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,12 +46,12 @@ fun HabitItem(
     if (showInputDialog) {
         AlertDialog(
             onDismissRequest = { showInputDialog = false },
-            title = { Text("Обновить прогресс для \"${habit.name}\"") },
+            title = { Text(stringResource(R.string.update_progress, habit.name)) },
             text = {
                 OutlinedTextField(
                     value = inputValue,
                     onValueChange = { inputValue = it.filter { c -> c.isDigit() || c == '.' } },
-                    label = { Text("Сегодняшний результат (${habit.unit})") },
+                    label = { Text(stringResource(R.string.today_result, habit.unit)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             },
@@ -62,12 +63,12 @@ fun HabitItem(
                         showInputDialog = false
                     }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showInputDialog = false }) {
-                    Text("Отмена")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -89,10 +90,10 @@ fun HabitItem(
                 Text(text = habit.name, style = MaterialTheme.typography.titleLarge)
                 Row {
                     IconButton(onClick = { onEditHabit(habit.id) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Редактировать")
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit_habit_button))
                     }
                     IconButton(onClick = { onDeleteHabit(habit) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Удалить")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_habit_button))
                     }
                 }
             }
@@ -118,13 +119,13 @@ fun HabitItem(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Прогресс: $progress / ${habit.targetValue} ${habit.unit}")
+                    Text(stringResource(R.string.progress, progress.toString(), habit.targetValue.toString(), habit.unit))
                     Button(onClick = {
                         val todayStatus = habit.dailyStatus[todayNormalized]?.toString() ?: ""
                         inputValue = todayStatus
                         showInputDialog = true
                     }) {
-                        Text("Обновить")
+                        Text(stringResource(R.string.update))
                     }
                 }
                 LinearProgressIndicator(
@@ -172,12 +173,12 @@ fun MeasurableHabitTracker(habit: Habit, onUpdateClick: () -> Unit) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
-            "Сегодня: ${"%.1f".format(todayValue)} / ${"%.1f".format(targetValue)} ${habit.unit}",
+            stringResource(R.string.today, "%.1f".format(todayValue), "%.1f".format(targetValue), habit.unit),
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = onUpdateClick) {
-            Text("Обновить результат")
+            Text(stringResource(R.string.update_result))
         }
     }
 }

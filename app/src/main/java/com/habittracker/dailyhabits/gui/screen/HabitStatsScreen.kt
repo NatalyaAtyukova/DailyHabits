@@ -33,6 +33,7 @@ import java.util.*
 import com.habittracker.dailyhabits.ui.components.AdBanner
 import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +58,7 @@ fun HabitStatsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Статистика привычек",
+                        text = stringResource(R.string.habit_statistics),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -70,7 +71,7 @@ fun HabitStatsScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Назад",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -101,17 +102,17 @@ fun HabitStatsScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.QueryStats,
-                        contentDescription = "Нет данных",
+                        contentDescription = stringResource(R.string.no_data),
                         tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                         modifier = Modifier.size(80.dp)
                     )
                     Text(
-                        "Нет данных для статистики",
+                        stringResource(R.string.no_data_for_statistics),
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        "Начните выполнять привычки, и здесь появится подробный анализ вашего прогресса.",
+                        stringResource(R.string.no_data_description),
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -138,7 +139,7 @@ fun HabitStatsScreen(
                 }
                 item {
                     Text(
-                        text = "Статистика по привычкам",
+                        text = stringResource(R.string.habit_statistics_title),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
@@ -202,10 +203,10 @@ private fun OverallStatsCard(stats: HabitStats) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            StatRow(Icons.Default.TrendingUp, "Среднее выполнение", "${stats.averageCompletion.toInt()}%", MaterialTheme.colorScheme.primary)
-            StatRow(Icons.Default.Whatshot, "Лучшая серия", "${stats.longestStreak} дней", MaterialTheme.colorScheme.tertiary)
-            StatRow(Icons.Default.HighlightOff, "Пропущено дней", "${stats.missedDays}", MaterialTheme.colorScheme.error)
-            StatRow(Icons.Default.CheckCircle, "Всего выполнено", "${stats.completedDays} раз", MaterialTheme.colorScheme.secondary)
+            StatRow(Icons.Default.TrendingUp, stringResource(R.string.average_completion), "${stats.averageCompletion.toInt()}%", MaterialTheme.colorScheme.primary)
+            StatRow(Icons.Default.Whatshot, stringResource(R.string.best_streak), "${stats.longestStreak} ${stringResource(R.string.days)}", MaterialTheme.colorScheme.tertiary)
+            StatRow(Icons.Default.HighlightOff, stringResource(R.string.missed_days), "${stats.missedDays}", MaterialTheme.colorScheme.error)
+            StatRow(Icons.Default.CheckCircle, stringResource(R.string.total_completed), "${stats.completedDays} раз", MaterialTheme.colorScheme.secondary)
         }
     }
 }
@@ -236,7 +237,7 @@ private fun CompletionChartCard(stats: HabitStats) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Соотношение выполнения",
+                text = stringResource(R.string.completion_ratio),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -329,9 +330,9 @@ private fun HabitStatsCard(habit: Habit, stats: HabitStats?) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                StatItem("Выполнено", "${stats.completedDays} дн.", MaterialTheme.colorScheme.primary)
-                StatItem("Пропущено", "${stats.missedDays} дн.", MaterialTheme.colorScheme.error)
-                StatItem("Серия", "${stats.longestStreak} дн.", MaterialTheme.colorScheme.tertiary)
+                StatItem(stringResource(R.string.completed), "${stats.completedDays} ${stringResource(R.string.days)}.", MaterialTheme.colorScheme.primary)
+                StatItem(stringResource(R.string.missed), "${stats.missedDays} ${stringResource(R.string.days)}.", MaterialTheme.colorScheme.error)
+                StatItem(stringResource(R.string.streak), "${stats.longestStreak} ${stringResource(R.string.days)}.", MaterialTheme.colorScheme.tertiary)
             }
         }
     }

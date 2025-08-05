@@ -21,6 +21,7 @@ import com.habittracker.dailyhabits.model.Habit
 import androidx.navigation.NavController
 import com.habittracker.dailyhabits.ui.components.AdBanner
 import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +48,7 @@ fun HabitListScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.BarChart,
-                        contentDescription = "Статистика",
+                        contentDescription = stringResource(R.string.statistics_button),
                         tint = MaterialTheme.colorScheme.onSecondary
                     )
                 }
@@ -62,7 +63,7 @@ fun HabitListScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Добавить привычку",
+                        contentDescription = stringResource(R.string.add_habit_button),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -79,7 +80,7 @@ fun HabitListScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Ваши привычки",
+                text = stringResource(R.string.your_habits),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -97,17 +98,17 @@ fun HabitListScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.ListAlt,
-                            contentDescription = "Пустой список",
+                            contentDescription = stringResource(R.string.empty_list_icon),
                             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                             modifier = Modifier.size(80.dp)
                         )
                         Text(
-                            text = "Привычек пока нет",
+                            text = stringResource(R.string.no_habits_yet),
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Нажмите на кнопку \"+\", чтобы добавить свою первую привычку и начать путь к новым достижениям!",
+                            text = stringResource(R.string.no_habits_description),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -115,7 +116,7 @@ fun HabitListScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(onClick = onAddHabit) {
                             Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-                            Text("Добавить привычку")
+                            Text(stringResource(R.string.add_habit))
                         }
                     }
                 }
