@@ -1,3 +1,115 @@
 <resources>
     <string name="daily_habits">Daily Habits: Трекер привычек</string>
+    
+    <!-- Navigation -->
+    <string name="back">Назад</string>
+    <string name="new_habit">Новая привычка</string>
+    <string name="edit_habit">Редактировать привычку</string>
+    
+    <!-- Habit List Screen -->
+    <string name="your_habits">Ваши привычки</string>
+    <string name="no_habits_yet">Привычек пока нет</string>
+    <string name="no_habits_description">Нажмите на кнопку \"+\", чтобы добавить свою первую привычку и начать путь к новым достижениям!</string>
+    <string name="add_habit">Добавить привычку</string>
+    <string name="statistics">Статистика</string>
+    
+    <!-- Add/Edit Habit Screen -->
+    <string name="name">Название</string>
+    <string name="name_required">Название*</string>
+    <string name="name_required_error">Название обязательно для заполнения</string>
+    <string name="name_example">Например: Пить воду, Зарядка, Чтение</string>
+    <string name="description">Описание</string>
+    <string name="deadline">Срок выполнения</string>
+    <string name="select_date">Выбрать дату</string>
+    <string name="change_date">Изменить дату</string>
+    <string name="habit_type">Тип привычки:</string>
+    <string name="simple">Обычная</string>
+    <string name="measurable">Измеряемая</string>
+    <string name="target">Цель</string>
+    <string name="target_required">Цель*</string>
+    <string name="target_error">Укажите числовое значение цели</string>
+    <string name="target_example">Например: 2 (км), 10 (страниц), 30 (минут)</string>
+    <string name="unit">Ед. изм.</string>
+    <string name="unit_required">Ед. изм.*</string>
+    <string name="unit_error">Укажите единицу измерения</string>
+    <string name="unit_example">км, страниц, минут и т.д.</string>
+    <string name="reminders_and_repeats">Напоминания и повторы</string>
+    <string name="add_reminder">Добавить напоминание</string>
+    <string name="remove_reminder">Удалить напоминание</string>
+    <string name="create_habit">Создать привычку</string>
+    <string name="save_changes">Сохранить изменения</string>
+    
+    <!-- Popular Habits -->
+    <string name="popular_habits">Популярные привычки</string>
+    <string name="drink_water">Пить воду</string>
+    <string name="drink_water_desc">Выпивать 6-8 стаканов воды в день</string>
+    <string name="exercise">Зарядка</string>
+    <string name="exercise_desc">Делать утреннюю разминку или упражнения</string>
+    <string name="reading">Чтение</string>
+    <string name="reading_desc">Читать хотя бы 10 страниц в день</string>
+    <string name="meditation">Медитация</string>
+    <string name="meditation_desc">Медитировать 5-10 минут</string>
+    <string name="walking">Прогулка</string>
+    <string name="walking_desc">Гулять на свежем воздухе не менее 30 минут</string>
+    <string name="journaling">Дневник</string>
+    <string name="journaling_desc">Записывать мысли или вести дневник</string>
+    <string name="early_rise">Ранний подъем</string>
+    <string name="early_rise_desc">Вставать до 8:00</string>
+    <string name="no_sweets">Без сладкого</string>
+    <string name="no_sweets_desc">Не есть сладкое в течение дня</string>
+    <string name="fruits_vegetables">Фрукты/овощи</string>
+    <string name="fruits_vegetables_desc">Съесть 3 порции овощей или фруктов</string>
+    <string name="sport">Спорт</string>
+    <string name="sport_desc">Заниматься спортом не менее 30 минут</string>
+    
+    <!-- Habit Item -->
+    <string name="edit">Редактировать</string>
+    <string name="delete">Удалить</string>
+    <string name="update_progress">Обновить прогресс для \"%s\"</string>
+    <string name="today_result">Сегодняшний результат (%s)</string>
+    <string name="progress">Прогресс: %s / %s %s</string>
+    <string name="update">Обновить</string>
+    <string name="today">Сегодня: %s / %s %s</string>
+    <string name="update_result">Обновить результат</string>
+    
+    <!-- Statistics Screen -->
+    <string name="habit_statistics">Статистика привычек</string>
+    <string name="no_data_for_statistics">Нет данных для статистики</string>
+    <string name="no_data_description">Начните выполнять привычки, и здесь появится подробный анализ вашего прогресса.</string>
+    <string name="overall_statistics">Общая статистика</string>
+    <string name="average_completion">Среднее выполнение</string>
+    <string name="best_streak">Лучшая серия</string>
+    <string name="missed_days">Пропущено дней</string>
+    <string name="total_completed">Всего выполнено</string>
+    <string name="completion_ratio">Соотношение выполнения</string>
+    <string name="habit_statistics_title">Статистика по привычкам</string>
+    <string name="completed">Выполнено</string>
+    <string name="missed">Пропущено</string>
+    <string name="streak">Серия</string>
+    <string name="days">дн.</string>
+    
+    <!-- Week Days -->
+    <string name="monday">Пн</string>
+    <string name="tuesday">Вт</string>
+    <string name="wednesday">Ср</string>
+    <string name="thursday">Чт</string>
+    <string name="friday">Пт</string>
+    <string name="saturday">Сб</string>
+    <string name="sunday">Вс</string>
+    
+    <!-- Messages -->
+    <string name="habit_added">Привычка добавлена!</string>
+    <string name="cancel">Отмена</string>
+    <string name="ok">ОК</string>
+    <string name="no_data">Нет данных</string>
+    
+    <!-- Content Descriptions -->
+    <string name="back_button">Назад</string>
+    <string name="edit_habit_button">Редактировать</string>
+    <string name="delete_habit_button">Удалить</string>
+    <string name="statistics_button">Статистика</string>
+    <string name="add_habit_button">Добавить привычку</string>
+    <string name="empty_list_icon">Пустой список</string>
+    <string name="status_icon">Статус</string>
+    <string name="remove_tag">Удалить тег</string>
 </resources>

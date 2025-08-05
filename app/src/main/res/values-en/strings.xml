@@ -1,0 +1,115 @@
+<resources>
+    <string name="daily_habits">Daily Habits: Habit Tracker</string>
+    
+    <!-- Navigation -->
+    <string name="back">Back</string>
+    <string name="new_habit">New Habit</string>
+    <string name="edit_habit">Edit Habit</string>
+    
+    <!-- Habit List Screen -->
+    <string name="your_habits">Your Habits</string>
+    <string name="no_habits_yet">No habits yet</string>
+    <string name="no_habits_description">Tap the \"+\" button to add your first habit and start your journey to new achievements!</string>
+    <string name="add_habit">Add Habit</string>
+    <string name="statistics">Statistics</string>
+    
+    <!-- Add/Edit Habit Screen -->
+    <string name="name">Name</string>
+    <string name="name_required">Name*</string>
+    <string name="name_required_error">Name is required</string>
+    <string name="name_example">For example: Drink Water, Exercise, Reading</string>
+    <string name="description">Description</string>
+    <string name="deadline">Deadline</string>
+    <string name="select_date">Select Date</string>
+    <string name="change_date">Change Date</string>
+    <string name="habit_type">Habit Type:</string>
+    <string name="simple">Simple</string>
+    <string name="measurable">Measurable</string>
+    <string name="target">Target</string>
+    <string name="target_required">Target*</string>
+    <string name="target_error">Please enter a numeric target value</string>
+    <string name="target_example">For example: 2 (km), 10 (pages), 30 (minutes)</string>
+    <string name="unit">Unit</string>
+    <string name="unit_required">Unit*</string>
+    <string name="unit_error">Please specify the unit of measurement</string>
+    <string name="unit_example">km, pages, minutes, etc.</string>
+    <string name="reminders_and_repeats">Reminders and Repeats</string>
+    <string name="add_reminder">Add Reminder</string>
+    <string name="remove_reminder">Remove Reminder</string>
+    <string name="create_habit">Create Habit</string>
+    <string name="save_changes">Save Changes</string>
+    
+    <!-- Popular Habits -->
+    <string name="popular_habits">Popular Habits</string>
+    <string name="drink_water">Drink Water</string>
+    <string name="drink_water_desc">Drink 6-8 glasses of water per day</string>
+    <string name="exercise">Exercise</string>
+    <string name="exercise_desc">Do morning warm-up or exercises</string>
+    <string name="reading">Reading</string>
+    <string name="reading_desc">Read at least 10 pages per day</string>
+    <string name="meditation">Meditation</string>
+    <string name="meditation_desc">Meditate for 5-10 minutes</string>
+    <string name="walking">Walking</string>
+    <string name="walking_desc">Walk outdoors for at least 30 minutes</string>
+    <string name="journaling">Journaling</string>
+    <string name="journaling_desc">Write thoughts or keep a diary</string>
+    <string name="early_rise">Early Rise</string>
+    <string name="early_rise_desc">Wake up before 8:00 AM</string>
+    <string name="no_sweets">No Sweets</string>
+    <string name="no_sweets_desc">Don\'t eat sweets during the day</string>
+    <string name="fruits_vegetables">Fruits/Vegetables</string>
+    <string name="fruits_vegetables_desc">Eat 3 servings of fruits or vegetables</string>
+    <string name="sport">Sport</string>
+    <string name="sport_desc">Exercise for at least 30 minutes</string>
+    
+    <!-- Habit Item -->
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="update_progress">Update progress for \"%s\"</string>
+    <string name="today_result">Today\'s result (%s)</string>
+    <string name="progress">Progress: %s / %s %s</string>
+    <string name="update">Update</string>
+    <string name="today">Today: %s / %s %s</string>
+    <string name="update_result">Update Result</string>
+    
+    <!-- Statistics Screen -->
+    <string name="habit_statistics">Habit Statistics</string>
+    <string name="no_data_for_statistics">No data for statistics</string>
+    <string name="no_data_description">Start performing habits, and detailed analysis of your progress will appear here.</string>
+    <string name="overall_statistics">Overall Statistics</string>
+    <string name="average_completion">Average Completion</string>
+    <string name="best_streak">Best Streak</string>
+    <string name="missed_days">Missed Days</string>
+    <string name="total_completed">Total Completed</string>
+    <string name="completion_ratio">Completion Ratio</string>
+    <string name="habit_statistics_title">Habit Statistics</string>
+    <string name="completed">Completed</string>
+    <string name="missed">Missed</string>
+    <string name="streak">Streak</string>
+    <string name="days">days</string>
+    
+    <!-- Week Days -->
+    <string name="monday">Mon</string>
+    <string name="tuesday">Tue</string>
+    <string name="wednesday">Wed</string>
+    <string name="thursday">Thu</string>
+    <string name="friday">Fri</string>
+    <string name="saturday">Sat</string>
+    <string name="sunday">Sun</string>
+    
+    <!-- Messages -->
+    <string name="habit_added">Habit added!</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="no_data">No data</string>
+    
+    <!-- Content Descriptions -->
+    <string name="back_button">Back</string>
+    <string name="edit_habit_button">Edit</string>
+    <string name="delete_habit_button">Delete</string>
+    <string name="statistics_button">Statistics</string>
+    <string name="add_habit_button">Add Habit</string>
+    <string name="empty_list_icon">Empty list</string>
+    <string name="status_icon">Status</string>
+    <string name="remove_tag">Remove tag</string>
+</resources> 

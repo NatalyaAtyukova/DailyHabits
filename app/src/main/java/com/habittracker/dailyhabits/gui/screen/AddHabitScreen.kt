@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
 import com.habittracker.dailyhabits.ui.components.AdBanner
 import com.habittracker.dailyhabits.ui.components.InterstitialAdManager
+import androidx.compose.ui.res.stringResource
 
 // --- СТАНДАРТНЫЕ ПРИВЫЧКИ ---
 data class StandardHabit(
@@ -91,10 +92,10 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Новая привычка") },
+                title = { Text(stringResource(R.string.new_habit)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back_button))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -119,7 +120,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
         ) {
             // --- БЛОК СТАНДАРТНЫХ ПРИВЫЧЕК ---
             item {
-                Text("Популярные привычки", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.popular_habits), style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -138,7 +139,19 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                                 unit = habit.unit ?: ""
                                 selectedStandard = habit.name
                             },
-                            label = { Text("${habit.emoji} ${habit.name}") },
+                            label = { Text("${habit.emoji} ${stringResource(when(habit.name) {
+                                "Пить воду" -> R.string.drink_water
+                                "Зарядка" -> R.string.exercise
+                                "Чтение" -> R.string.reading
+                                "Медитация" -> R.string.meditation
+                                "Прогулка" -> R.string.walking
+                                "Дневник" -> R.string.journaling
+                                "Ранний подъем" -> R.string.early_rise
+                                "Без сладкого" -> R.string.no_sweets
+                                "Фрукты/овощи" -> R.string.fruits_vegetables
+                                "Спорт" -> R.string.sport
+                                else -> R.string.drink_water
+                            })}") },
                             colors = FilterChipDefaults.filterChipColors(
                                 containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                             )
@@ -155,14 +168,14 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                         name = it
                         nameError = false
                     },
-                    label = { Text("Название*") },
+                    label = { Text(stringResource(R.string.name_required)) },
                     isError = nameError,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth(),
                     supportingText = {
-                        if (nameError) Text("Название обязательно для заполнения", color = MaterialTheme.colorScheme.error)
-                        else Text("Например: Пить воду, Зарядка, Чтение")
+                        if (nameError) Text(stringResource(R.string.name_required_error), color = MaterialTheme.colorScheme.error)
+                        else Text(stringResource(R.string.name_example))
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = if (nameError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
@@ -175,7 +188,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Описание") },
+                    label = { Text(stringResource(R.string.description)) },
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -201,7 +214,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Срок выполнения",
+                            text = stringResource(R.string.deadline),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -230,7 +243,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(if (deadline == null) "Выбрать дату" else "Изменить дату")
+                            Text(if (deadline == null) stringResource(R.string.select_date) else stringResource(R.string.change_date))
                         }
                     }
                 }
@@ -243,16 +256,16 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Тип привычки:", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.habit_type), style = MaterialTheme.typography.bodyLarge)
                     FilterChip(
                         selected = habitType == HabitType.SIMPLE,
                         onClick = { habitType = HabitType.SIMPLE },
-                        label = { Text("Обычная") }
+                        label = { Text(stringResource(R.string.simple)) }
                     )
                     FilterChip(
                         selected = habitType == HabitType.MEASURABLE,
                         onClick = { habitType = HabitType.MEASURABLE },
-                        label = { Text("Измеряемая") }
+                        label = { Text(stringResource(R.string.measurable)) }
                     )
                 }
             }
@@ -270,13 +283,13 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                                 targetValue = it.filter { c -> c.isDigit() || c == '.' }
                                 targetValueError = false
                             },
-                            label = { Text("Цель*") },
+                            label = { Text(stringResource(R.string.target_required)) },
                             isError = targetValueError,
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
                             supportingText = {
-                                if (targetValueError) Text("Укажите числовое значение цели", color = MaterialTheme.colorScheme.error)
-                                else Text("Например: 2 (км), 10 (страниц), 30 (минут)")
+                                if (targetValueError) Text(stringResource(R.string.target_error), color = MaterialTheme.colorScheme.error)
+                                else Text(stringResource(R.string.target_example))
                             }
                         )
                         OutlinedTextField(
@@ -285,12 +298,12 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                                 unit = it
                                 unitError = false
                             },
-                            label = { Text("Ед. изм.*") },
+                            label = { Text(stringResource(R.string.unit_required)) },
                             isError = unitError,
                             modifier = Modifier.weight(1f),
                             supportingText = {
-                                if (unitError) Text("Укажите единицу измерения", color = MaterialTheme.colorScheme.error)
-                                else Text("км, страниц, минут и т.д.")
+                                if (unitError) Text(stringResource(R.string.unit_error), color = MaterialTheme.colorScheme.error)
+                                else Text(stringResource(R.string.unit_example))
                             }
                         )
                     }
@@ -301,7 +314,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                 // Настройка повторов и напоминаний
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
-                        Text("Напоминания и повторы", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.reminders_and_repeats), style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // --- Список напоминаний ---
@@ -309,12 +322,12 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(time, style = MaterialTheme.typography.bodyLarge)
                                 IconButton(onClick = { reminders = reminders.toMutableList().also { it.removeAt(idx) } }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Удалить напоминание")
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.remove_reminder))
                                 }
                             }
                         }
                         Button(onClick = { showTimePicker = true }) {
-                            Text("Добавить напоминание")
+                            Text(stringResource(R.string.add_reminder))
                         }
                         if (showTimePicker) {
                             val context = LocalContext.current
@@ -405,7 +418,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-                    Text("Создать привычку", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.create_habit), style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -413,7 +426,7 @@ fun AddHabitScreen(viewModel: HabitViewModel, navController: NavController, onBa
         if (showSnackbar) {
             LaunchedEffect(showSnackbar) {
                 snackbarHostState.showSnackbar(
-                    message = "Привычка добавлена!",
+                    message = stringResource(R.string.habit_added),
                     withDismissAction = true
                 )
                 kotlinx.coroutines.delay(1200)
