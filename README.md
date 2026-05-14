@@ -1,36 +1,30 @@
+# DailyHabits
 
-📅 Daily Habits – Трекер привычек
+Android habit tracker app focused on building consistent daily routines.
 
-Daily Habits – это мобильное приложение для отслеживания и формирования полезных привычек. Оно помогает пользователям устанавливать цели, отмечать выполненные задачи и анализировать свой прогресс.
+## Status
 
-🚀 Функционал
+Portfolio/WIP project.
 
-✅ Добавление и редактирование привычек – создавайте привычки, указывайте дедлайны и редактируйте их в любое время.
-✅ Гибкая отметка выполнения – выбирайте статус дня (выполнено/пропущено), чтобы видеть свой прогресс.
-✅ Прогресс-бар – визуальное отображение успехов для каждой привычки.
-✅ Автоматическая проверка пропущенных дней – приложение отслеживает дни, когда привычка не была отмечена.
-✅ Напоминания – ежедневные уведомления, чтобы не забывать о привычках.
-✅ Интуитивный интерфейс – минималистичный и удобный дизайн для простого взаимодействия.
+## Stack
 
-📲 Технологии
-	•	Kotlin – язык разработки
-	•	Jetpack Compose – декларативный UI
-	•	Room Database – хранение данных о привычках
-	•	WorkManager – для фоновых напоминаний
-	•	Android Notification API – для уведомлений
-	•	MVVM – архитектурный паттерн
+- Kotlin
+- Jetpack Compose
+- Room
+- WorkManager
+- MVVM
 
-🔧 Установка и запуск
-	1.	Склонируйте репозиторий
+## Run locally
 
-git clone 
+1. Clone the repository:
+```bash
+git clone https://github.com/NataliaAtiukova/DailyHabits.git
+cd DailyHabits
+```
+2. Open the project in Android Studio.
+3. Let Gradle sync and run on emulator/device.
 
+## Notes
 
-	2.	Откройте проект в Android Studio
-	•	Убедитесь, что у вас установлена последняя версия Android Studio.
-	3.	Соберите и запустите приложение
-	•	Используйте эмулятор или подключите реальное устройство.
-	4.	Разрешите уведомления (Android 13+)
-	•	Приложение запрашивает POST_NOTIFICATIONS, чтобы отправлять напоминания.
-
-
+- Main Android module is in `app/`.
+- On Android 13+, notifications permission is required for reminders.
